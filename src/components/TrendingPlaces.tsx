@@ -2,6 +2,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Star, MapPin, Users } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 interface TrendingPlacesProps {
   onPlaceClick?: (destination: string) => void;
@@ -56,14 +57,63 @@ const trendingPlaces = [
 ];
 
 const TrendingPlaces = ({ onPlaceClick }: TrendingPlacesProps) => {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
+
+    let scrollPosition = 0;
+    const scrollSpeed = 1; // pixels per frame
+    const cardWidth = 320; // approximate card width with gap
+    const totalWidth = trendingPlaces.length * cardWidth;
+
+    const scroll = () => {
+      scrollPosition += scrollSpeed;
+      
+      // Reset position when we've scrolled through all cards
+      if (scrollPosition >= totalWidth) {
+        scrollPosition = 0;
+      }
+      
+      scrollContainer.scrollLeft = scrollPosition;
+    };
+
+    const intervalId = setInterval(scroll, 50); // 20fps for smooth scrolling
+
+    // Pause scrolling on hover
+    const handleMouseEnter = () => clearInterval(intervalId);
+    const handleMouseLeave = () => {
+      const newIntervalId = setInterval(scroll, 50);
+      return newIntervalId;
+    };
+
+    scrollContainer.addEventListener('mouseenter', handleMouseEnter);
+    scrollContainer.addEventListener('mouseleave', () => {
+      const newIntervalId = setInterval(scroll, 50);
+      scrollContainer.dataset.intervalId = newIntervalId.toString();
+    });
+
+    return () => {
+      clearInterval(intervalId);
+      scrollContainer?.removeEventListener('mouseenter', handleMouseEnter);
+      scrollContainer?.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, []);
+
   return (
-    <div className="relative">
-      {/* Desktop Grid */}
-      <div className="hidden md:grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-        {trendingPlaces.map((place) => (
+    <div className="relative overflow-hidden">
+      {/* Auto-scrolling horizontal container */}
+      <div 
+        ref={scrollRef}
+        className="flex space-x-6 overflow-x-hidden pb-4"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      >
+        {/* Duplicate the places array to create seamless loop */}
+        {[...trendingPlaces, ...trendingPlaces].map((place, index) => (
           <Card 
-            key={place.id} 
-            className="card-hover cursor-pointer"
+            key={`${place.id}-${index}`} 
+            className="flex-none w-80 card-hover cursor-pointer"
             onClick={() => onPlaceClick?.(place.name)}
           >
             <div className="relative">
@@ -101,53 +151,6 @@ const TrendingPlaces = ({ onPlaceClick }: TrendingPlacesProps) => {
             </CardContent>
           </Card>
         ))}
-      </div>
-
-      {/* Mobile Horizontal Scroll */}
-      <div className="md:hidden">
-        <div className="flex space-x-4 overflow-x-auto pb-4 snap-x snap-mandatory">
-          {trendingPlaces.map((place) => (
-            <Card 
-              key={place.id} 
-              className="flex-none w-80 card-hover cursor-pointer snap-start"
-              onClick={() => onPlaceClick?.(place.name)}
-            >
-              <div className="relative">
-                <img 
-                  src={place.image} 
-                  alt={place.name}
-                  className="w-full h-48 object-cover rounded-t-lg"
-                />
-                <div className="absolute top-4 right-4">
-                  <Badge className="bg-black/20 backdrop-blur-sm text-white border-0">
-                    {place.price}
-                  </Badge>
-                </div>
-              </div>
-              <CardContent className="p-4">
-                <h4 className="font-bold text-lg mb-2">{place.name}</h4>
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-1">
-                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                    <span className="font-semibold">{place.rating}</span>
-                    <span className="text-gray-500 text-sm">({place.reviews})</span>
-                  </div>
-                  <div className="flex items-center space-x-1 text-gray-500">
-                    <Users className="w-4 h-4" />
-                    <span className="text-sm">{place.reviews}</span>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {place.highlights.map((highlight, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
-                      {highlight}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
       </div>
     </div>
   );

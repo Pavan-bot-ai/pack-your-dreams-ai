@@ -22,6 +22,7 @@ import AILocalGuide from "@/components/AILocalGuide";
 import SmartTripPlanner from "@/components/SmartTripPlanner";
 import AITranslator from "@/components/AITranslator";
 import AIBookings from "@/components/AIBookings";
+import HamburgerMenu from "@/components/HamburgerMenu";
 
 const Index = () => {
   const [showAuth, setShowAuth] = useState(false);
@@ -68,6 +69,39 @@ const Index = () => {
     setShowTripPlanner(true);
   };
 
+  const handleMenuItemClick = (item: string) => {
+    if (!isLoggedIn && item !== 'login' && item !== 'settings') {
+      setShowAuth(true);
+      return;
+    }
+
+    switch (item) {
+      case 'login':
+        setShowAuth(true);
+        break;
+      case 'booked-plans':
+        setShowTripPlanner(true);
+        break;
+      case 'transactions':
+        console.log('Opening transactions');
+        break;
+      case 'saved-places':
+        console.log('Opening saved places');
+        break;
+      case 'trip-history':
+        console.log('Opening trip history');
+        break;
+      case 'profile':
+        console.log('Opening profile');
+        break;
+      case 'settings':
+        console.log('Opening settings');
+        break;
+      default:
+        console.log(`Opening ${item}`);
+    }
+  };
+
   const handleLogin = (userData: any) => {
     setIsLoggedIn(true);
     setUser(userData);
@@ -85,6 +119,7 @@ const Index = () => {
       <header className="sticky top-0 z-50 glass-morphism">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center space-x-2">
+            <HamburgerMenu isLoggedIn={isLoggedIn} onMenuItemClick={handleMenuItemClick} />
             <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
               <Plane className="w-6 h-6 text-white" />
             </div>
