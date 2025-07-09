@@ -335,7 +335,7 @@ const SmartTripPlanner = ({ isOpen, onClose, defaultDestination, defaultPlan }: 
                   <Card key={stepItem.id} className={`${isCurrent ? 'ring-2 ring-blue-500' : ''} ${isCompleted ? 'bg-green-50' : ''}`}>
                     <CardContent className="p-4">
                       <div className="flex items-center space-x-4">
-                        <Checkbox checked={isCompleted} readOnly />
+                        <Checkbox checked={isCompleted} disabled />
                         <div className={`w-10 h-10 rounded-full ${isCompleted ? 'bg-green-500' : isCurrent ? 'bg-blue-500' : 'bg-gray-300'} flex items-center justify-center`}>
                           <IconComponent className="w-5 h-5 text-white" />
                         </div>
