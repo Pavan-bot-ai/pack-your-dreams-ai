@@ -19,12 +19,19 @@ import QuickActions from "@/components/QuickActions";
 import VideoReels from "@/components/VideoReels";
 import AuthModal from "@/components/AuthModal";
 import AILocalGuide from "@/components/AILocalGuide";
+import SmartTripPlanner from "@/components/SmartTripPlanner";
+import AITranslator from "@/components/AITranslator";
+import AIBookings from "@/components/AIBookings";
 
 const Index = () => {
   const [showAuth, setShowAuth] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showLocalGuide, setShowLocalGuide] = useState(false);
+  const [showTripPlanner, setShowTripPlanner] = useState(false);
+  const [showTranslator, setShowTranslator] = useState(false);
+  const [showBookings, setShowBookings] = useState(false);
   const [user, setUser] = useState(null);
+  const [selectedDestination, setSelectedDestination] = useState<string>('');
 
   const handleFeatureClick = (feature: string) => {
     if (!isLoggedIn) {
@@ -32,11 +39,33 @@ const Index = () => {
       return;
     }
     
-    if (feature === 'local-guide') {
-      setShowLocalGuide(true);
+    switch (feature) {
+      case 'trip-planner':
+        setShowTripPlanner(true);
+        break;
+      case 'local-guide':
+        setShowLocalGuide(true);
+        break;
+      case 'translator':
+        setShowTranslator(true);
+        break;
+      case 'bookings':
+        setShowBookings(true);
+        break;
+      default:
+        console.log(`Opening ${feature}`);
     }
-    // Handle other features here
-    console.log(`Opening ${feature}`);
+  };
+
+  const handleTrendingPlaceClick = (destination: string) => {
+    if (!isLoggedIn) {
+      setShowAuth(true);
+      return;
+    }
+    
+    // Load default plan for the selected destination
+    setSelectedDestination(destination);
+    setShowTripPlanner(true);
   };
 
   const handleLogin = (userData: any) => {
@@ -101,7 +130,7 @@ const Index = () => {
               Let AI plan your perfect trip with personalized recommendations and smart itineraries
             </p>
           </div>
-          <TrendingPlaces />
+          <TrendingPlaces onPlaceClick={handleTrendingPlaceClick} />
         </div>
       </section>
 
@@ -128,10 +157,32 @@ const Index = () => {
         onLogin={handleLogin}
       />
 
+      {/* Smart Trip Planner Modal */}
+      <SmartTripPlanner 
+        isOpen={showTripPlanner}
+        onClose={() => {
+          setShowTripPlanner(false);
+          setSelectedDestination('');
+        }}
+        defaultDestination={selectedDestination}
+      />
+
       {/* AI Local Guide Modal */}
       <AILocalGuide 
         isOpen={showLocalGuide}
         onClose={() => setShowLocalGuide(false)}
+      />
+
+      {/* AI Translator Modal */}
+      <AITranslator 
+        isOpen={showTranslator}
+        onClose={() => setShowTranslator(false)}
+      />
+
+      {/* AI Bookings Modal */}
+      <AIBookings 
+        isOpen={showBookings}
+        onClose={() => setShowBookings(false)}
       />
     </div>
   );

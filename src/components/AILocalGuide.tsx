@@ -4,18 +4,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
 import { 
+  User, 
+  Mail, 
+  Phone, 
   MapPin, 
-  Calendar, 
-  Users, 
-  DollarSign, 
-  Sparkles, 
-  ChevronRight, 
-  ChevronLeft,
-  RefreshCw,
+  Briefcase,
+  Award,
+  Building,
+  FileText,
   CheckCircle
 } from "lucide-react";
 
@@ -24,318 +22,331 @@ interface AILocalGuideProps {
   onClose: () => void;
 }
 
-const samplePlans = [
-  {
-    id: 1,
-    title: "Cultural Heritage Tour",
-    duration: "5 days",
-    feasibilityScore: 95,
-    highlights: ["Ancient temples", "Local markets", "Traditional cuisine", "Art galleries"],
-    itinerary: [
-      { day: 1, activities: ["Arrive and check-in", "Local orientation walk", "Welcome dinner"] },
-      { day: 2, activities: ["Temple complex visit", "Traditional craft workshop", "Street food tour"] },
-      { day: 3, activities: ["Art gallery tours", "Local market exploration", "Cooking class"] },
-      { day: 4, activities: ["Historical site visit", "Cultural performance", "Rooftop dining"] },
-      { day: 5, activities: ["Souvenir shopping", "Final exploration", "Departure"] }
-    ],
-    estimatedCost: "$1,200 - $1,500"
-  },
-  {
-    id: 2,
-    title: "Adventure Explorer Package",
-    duration: "7 days",
-    feasibilityScore: 88,
-    highlights: ["Hiking trails", "Water sports", "Mountain views", "Local wildlife"],
-    itinerary: [
-      { day: 1, activities: ["Arrival and gear check", "Base camp setup", "Evening briefing"] },
-      { day: 2, activities: ["Mountain hiking", "Scenic viewpoints", "Outdoor camping"] },
-      { day: 3, activities: ["Water sports activities", "Beach exploration", "Sunset watching"] },
-      { day: 4, activities: ["Wildlife sanctuary visit", "Nature photography", "Local guide stories"] },
-      { day: 5, activities: ["Rock climbing", "Adventure sports", "Team building"] },
-      { day: 6, activities: ["Cultural village visit", "Traditional games", "Farewell party"] },
-      { day: 7, activities: ["Pack up", "Final activities", "Departure"] }
-    ],
-    estimatedCost: "$1,800 - $2,200"
-  },
-  {
-    id: 3,
-    title: "Relaxation & Wellness Retreat",
-    duration: "4 days",
-    feasibilityScore: 92,
-    highlights: ["Spa treatments", "Yoga sessions", "Healthy cuisine", "Beach relaxation"],
-    itinerary: [
-      { day: 1, activities: ["Arrival and welcome drink", "Spa orientation", "Sunset yoga"] },
-      { day: 2, activities: ["Morning meditation", "Full body massage", "Healthy cooking class"] },
-      { day: 3, activities: ["Beach yoga", "Wellness treatments", "Detox activities"] },
-      { day: 4, activities: ["Final relaxation", "Wellness consultation", "Peaceful departure"] }
-    ],
-    estimatedCost: "$900 - $1,100"
-  }
-];
-
 const AILocalGuide = ({ isOpen, onClose }: AILocalGuideProps) => {
-  const [step, setStep] = useState<'input' | 'plans'>('input');
-  const [currentPlan, setCurrentPlan] = useState(0);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [tripDetails, setTripDetails] = useState({
-    destination: '',
-    duration: '',
-    travelers: '',
-    budget: '',
-    interests: ''
+  const [step, setStep] = useState<'personal' | 'contact' | 'professional' | 'complete'>('personal');
+  const [formData, setFormData] = useState({
+    // Personal Details
+    firstName: '',
+    lastName: '',
+    age: '',
+    nationality: '',
+    languages: '',
+    
+    // Contact Information
+    email: '',
+    phone: '',
+    address: '',
+    emergencyContact: '',
+    
+    // Professional Information
+    occupation: '',
+    company: '',
+    certifications: '',
+    experience: '',
+    specializations: ''
   });
 
-  const handleGeneratePlans = () => {
-    setIsGenerating(true);
-    setTimeout(() => {
-      setIsGenerating(false);
-      setStep('plans');
-    }, 2000);
+  const handleNext = () => {
+    if (step === 'personal') setStep('contact');
+    else if (step === 'contact') setStep('professional');
+    else if (step === 'professional') setStep('complete');
   };
 
-  const handleNextPlan = () => {
-    if (currentPlan < samplePlans.length - 1) {
-      setCurrentPlan(currentPlan + 1);
-    }
-  };
-
-  const handlePrevPlan = () => {
-    if (currentPlan > 0) {
-      setCurrentPlan(currentPlan - 1);
-    }
-  };
-
-  const handleRegenerate = () => {
-    setIsGenerating(true);
-    setTimeout(() => {
-      setIsGenerating(false);
-      setCurrentPlan(0);
-    }, 2000);
-  };
-
-  const handleSelectPlan = () => {
-    alert(`Selected: ${samplePlans[currentPlan].title}`);
+  const handleSubmit = () => {
+    console.log('Local Guide Profile:', formData);
+    alert('Profile created successfully! You can now provide local guidance services.');
     onClose();
   };
 
-  const currentPlanData = samplePlans[currentPlan];
+  const updateFormData = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
+              <User className="w-4 h-4 text-white" />
             </div>
-            <span>AI Local Guide</span>
+            <span>AI Local Guide Registration</span>
           </DialogTitle>
         </DialogHeader>
 
-        {step === 'input' && (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-semibold mb-2">Tell us about your dream trip</h3>
-              <p className="text-gray-600">We'll create personalized itineraries just for you</p>
-            </div>
+        {step === 'personal' && (
+          <Card>
+            <CardContent className="p-6 space-y-4">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-semibold mb-2">Personal Information</h3>
+                <p className="text-gray-600">Tell us about yourself to become a local guide</p>
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="destination">Destination</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
                   <Input
-                    id="destination"
-                    placeholder="Where do you want to go?"
-                    className="pl-10"
-                    value={tripDetails.destination}
-                    onChange={(e) => setTripDetails({...tripDetails, destination: e.target.value})}
+                    id="firstName"
+                    placeholder="Enter your first name"
+                    value={formData.firstName}
+                    onChange={(e) => updateFormData('firstName', e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    placeholder="Enter your last name"
+                    value={formData.lastName}
+                    onChange={(e) => updateFormData('lastName', e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="age">Age</Label>
+                  <Input
+                    id="age"
+                    placeholder="Your age"
+                    value={formData.age}
+                    onChange={(e) => updateFormData('age', e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="nationality">Nationality</Label>
+                  <Input
+                    id="nationality"
+                    placeholder="Your nationality"
+                    value={formData.nationality}
+                    onChange={(e) => updateFormData('nationality', e.target.value)}
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="duration">Duration</Label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="duration"
-                    placeholder="How many days?"
-                    className="pl-10"
-                    value={tripDetails.duration}
-                    onChange={(e) => setTripDetails({...tripDetails, duration: e.target.value})}
-                  />
-                </div>
+                <Label htmlFor="languages">Languages Spoken</Label>
+                <Input
+                  id="languages"
+                  placeholder="e.g., English, Spanish, French..."
+                  value={formData.languages}
+                  onChange={(e) => updateFormData('languages', e.target.value)}
+                />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="travelers">Number of Travelers</Label>
-                <div className="relative">
-                  <Users className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="travelers"
-                    placeholder="How many people?"
-                    className="pl-10"
-                    value={tripDetails.travelers}
-                    onChange={(e) => setTripDetails({...tripDetails, travelers: e.target.value})}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="budget">Budget Range</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="budget"
-                    placeholder="Your budget range"
-                    className="pl-10"
-                    value={tripDetails.budget}
-                    onChange={(e) => setTripDetails({...tripDetails, budget: e.target.value})}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="interests">Interests & Preferences</Label>
-              <Input
-                id="interests"
-                placeholder="Adventure, culture, relaxation, food, nightlife..."
-                value={tripDetails.interests}
-                onChange={(e) => setTripDetails({...tripDetails, interests: e.target.value})}
-              />
-            </div>
-
-            <Button 
-              onClick={handleGeneratePlans}
-              className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
-              disabled={isGenerating}
-            >
-              {isGenerating ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Generating Plans...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Generate Plans
-                </>
-              )}
-            </Button>
-          </div>
-        )}
-
-        {step === 'plans' && !isGenerating && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold">Your Personalized Plans</h3>
-              <Badge variant="secondary">
-                Plan {currentPlan + 1} of {samplePlans.length}
-              </Badge>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl">{currentPlanData.title}</CardTitle>
-                  <div className="text-right">
-                    <div className="text-sm text-gray-600">Feasibility Score</div>
-                    <div className="flex items-center space-x-2">
-                      <Progress value={currentPlanData.feasibilityScore} className="w-20" />
-                      <span className="font-bold text-lg">{currentPlanData.feasibilityScore}/100</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4 text-sm text-gray-600">
-                  <span>{currentPlanData.duration}</span>
-                  <span>•</span>
-                  <span>{currentPlanData.estimatedCost}</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="font-semibold mb-3">Highlights</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {currentPlanData.highlights.map((highlight, index) => (
-                        <Badge key={index} variant="outline">
-                          {highlight}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h4 className="font-semibold mb-3">Smart Itinerary</h4>
-                    <div className="space-y-3">
-                      {currentPlanData.itinerary.map((dayPlan) => (
-                        <div key={dayPlan.day} className="border rounded-lg p-4">
-                          <h5 className="font-medium mb-2">Day {dayPlan.day}</h5>
-                          <ul className="space-y-1">
-                            {dayPlan.activities.map((activity, index) => (
-                              <li key={index} className="flex items-center space-x-2 text-sm">
-                                <CheckCircle className="w-4 h-4 text-green-500" />
-                                <span>{activity}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div className="flex items-center justify-between">
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  onClick={handlePrevPlan}
-                  disabled={currentPlan === 0}
-                >
-                  <ChevronLeft className="w-4 h-4 mr-2" />
-                  Previous Plan
-                </Button>
-                
-                {currentPlan < samplePlans.length - 1 ? (
-                  <Button
-                    variant="outline"
-                    onClick={handleNextPlan}
-                  >
-                    Next Plan
-                    <ChevronRight className="w-4 h-4 ml-2" />
-                  </Button>
-                ) : (
-                  <Button
-                    variant="outline"
-                    onClick={handleRegenerate}
-                  >
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Regenerate
-                  </Button>
-                )}
-              </div>
-
-              <Button 
-                onClick={handleSelectPlan}
-                className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600"
-              >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Select This Plan
+              <Button onClick={handleNext} className="w-full">
+                Next: Contact Information
               </Button>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         )}
 
-        {isGenerating && (
-          <div className="text-center py-12">
-            <RefreshCw className="w-12 h-12 mx-auto mb-4 animate-spin text-blue-500" />
-            <h3 className="text-xl font-semibold mb-2">Generating Your Perfect Trip</h3>
-            <p className="text-gray-600">Our AI is analyzing thousands of options...</p>
-          </div>
+        {step === 'contact' && (
+          <Card>
+            <CardContent className="p-6 space-y-4">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-semibold mb-2">Contact Information</h3>
+                <p className="text-gray-600">How can travelers reach you?</p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email Address</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="your@email.com"
+                      className="pl-10"
+                      value={formData.email}
+                      onChange={(e) => updateFormData('email', e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="phone"
+                      placeholder="+1 (555) 000-0000"
+                      className="pl-10"
+                      value={formData.phone}
+                      onChange={(e) => updateFormData('phone', e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="address">Location/Address</Label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="address"
+                      placeholder="City, Country"
+                      className="pl-10"
+                      value={formData.address}
+                      onChange={(e) => updateFormData('address', e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="emergencyContact">Emergency Contact</Label>
+                  <Input
+                    id="emergencyContact"
+                    placeholder="Emergency contact details"
+                    value={formData.emergencyContact}
+                    onChange={(e) => updateFormData('emergencyContact', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="flex space-x-4">
+                <Button variant="outline" onClick={() => setStep('personal')} className="flex-1">
+                  Back
+                </Button>
+                <Button onClick={handleNext} className="flex-1">
+                  Next: Professional Info
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 'professional' && (
+          <Card>
+            <CardContent className="p-6 space-y-4">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-semibold mb-2">Professional Information</h3>
+                <p className="text-gray-600">Your qualifications and expertise</p>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="occupation">Occupation</Label>
+                  <div className="relative">
+                    <Briefcase className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="occupation"
+                      placeholder="Your current job title"
+                      className="pl-10"
+                      value={formData.occupation}
+                      onChange={(e) => updateFormData('occupation', e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="company">Company/Organization</Label>
+                  <div className="relative">
+                    <Building className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="company"
+                      placeholder="Where you work"
+                      className="pl-10"
+                      value={formData.company}
+                      onChange={(e) => updateFormData('company', e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="certifications">Certifications</Label>
+                  <div className="relative">
+                    <Award className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="certifications"
+                      placeholder="Tourism, First Aid, Language certifications..."
+                      className="pl-10"
+                      value={formData.certifications}
+                      onChange={(e) => updateFormData('certifications', e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="experience">Years of Experience</Label>
+                  <Input
+                    id="experience"
+                    placeholder="Years in tourism/hospitality"
+                    value={formData.experience}
+                    onChange={(e) => updateFormData('experience', e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="specializations">Specializations</Label>
+                  <div className="relative">
+                    <FileText className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="specializations"
+                      placeholder="Adventure tours, cultural experiences, food tours..."
+                      className="pl-10"
+                      value={formData.specializations}
+                      onChange={(e) => updateFormData('specializations', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex space-x-4">
+                <Button variant="outline" onClick={() => setStep('contact')} className="flex-1">
+                  Back
+                </Button>
+                <Button onClick={handleNext} className="flex-1">
+                  Review & Submit
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {step === 'complete' && (
+          <Card>
+            <CardContent className="p-6 text-center space-y-6">
+              <div className="w-16 h-16 mx-auto rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-green-500" />
+              </div>
+              
+              <div>
+                <h3 className="text-xl font-semibold mb-2">Review Your Information</h3>
+                <p className="text-gray-600">Please confirm your details before submitting</p>
+              </div>
+
+              <div className="text-left space-y-4 bg-gray-50 p-4 rounded-lg">
+                <div>
+                  <strong>Name:</strong> {formData.firstName} {formData.lastName}
+                </div>
+                <div>
+                  <strong>Contact:</strong> {formData.email} | {formData.phone}
+                </div>
+                <div>
+                  <strong>Location:</strong> {formData.address}
+                </div>
+                <div>
+                  <strong>Occupation:</strong> {formData.occupation} at {formData.company}
+                </div>
+                <div>
+                  <strong>Certifications:</strong> {formData.certifications}
+                </div>
+                <div>
+                  <strong>Specializations:</strong> {formData.specializations}
+                </div>
+              </div>
+
+              <div className="flex space-x-4">
+                <Button variant="outline" onClick={() => setStep('professional')} className="flex-1">
+                  Edit Details
+                </Button>
+                <Button onClick={handleSubmit} className="flex-1 bg-gradient-to-r from-green-500 to-teal-500">
+                  Submit Application
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         )}
       </DialogContent>
     </Dialog>
