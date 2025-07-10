@@ -6,6 +6,7 @@ import { useEffect, useRef } from "react";
 
 interface TrendingPlacesProps {
   onPlaceClick?: (destination: string) => void;
+  onImageClick?: (destination: string) => void;
 }
 
 const trendingPlaces = [
@@ -56,7 +57,7 @@ const trendingPlaces = [
   }
 ];
 
-const TrendingPlaces = ({ onPlaceClick }: TrendingPlacesProps) => {
+const TrendingPlaces = ({ onPlaceClick, onImageClick }: TrendingPlacesProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -101,6 +102,16 @@ const TrendingPlaces = ({ onPlaceClick }: TrendingPlacesProps) => {
     };
   }, []);
 
+  const handleCardClick = (place: any, event: React.MouseEvent) => {
+    // Check if the click was on the image
+    const target = event.target as Element;
+    if (target.tagName === 'IMG') {
+      onImageClick?.(place.name);
+    } else {
+      onPlaceClick?.(place.name);
+    }
+  };
+
   return (
     <div className="relative overflow-hidden">
       {/* Auto-scrolling horizontal container */}
@@ -114,13 +125,13 @@ const TrendingPlaces = ({ onPlaceClick }: TrendingPlacesProps) => {
           <Card 
             key={`${place.id}-${index}`} 
             className="flex-none w-80 card-hover cursor-pointer"
-            onClick={() => onPlaceClick?.(place.name)}
+            onClick={(e) => handleCardClick(place, e)}
           >
             <div className="relative">
               <img 
                 src={place.image} 
                 alt={place.name}
-                className="w-full h-48 object-cover rounded-t-lg"
+                className="w-full h-48 object-cover rounded-t-lg cursor-pointer hover:opacity-90 transition-opacity"
               />
               <div className="absolute top-4 right-4">
                 <Badge className="bg-black/20 backdrop-blur-sm text-white border-0">

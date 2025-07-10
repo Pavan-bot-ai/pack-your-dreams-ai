@@ -23,6 +23,7 @@ import AITranslator from "@/components/AITranslator";
 import AIBookings from "@/components/AIBookings";
 import HamburgerMenu from "@/components/HamburgerMenu";
 import TransactionsList from "@/components/TransactionsList";
+import PlaceDetailsModal from "@/components/PlaceDetailsModal";
 
 const Index = () => {
   const [showAuth, setShowAuth] = useState(false);
@@ -35,6 +36,8 @@ const Index = () => {
   const [selectedDestination, setSelectedDestination] = useState<string>('');
 
   const [showTransactions, setShowTransactions] = useState(false);
+  const [showPlaceDetails, setShowPlaceDetails] = useState(false);
+  const [selectedPlaceForDetails, setSelectedPlaceForDetails] = useState<string>('');
 
   const handleFeatureClick = (feature: string) => {
     if (!isLoggedIn) {
@@ -115,6 +118,27 @@ const Index = () => {
     setUser(null);
   };
 
+  const handlePlaceImageClick = (destination: string) => {
+    if (!isLoggedIn) {
+      setShowAuth(true);
+      return;
+    }
+    
+    setSelectedPlaceForDetails(destination);
+    setShowPlaceDetails(true);
+  };
+
+  const handleGeneratePlanFromDetails = (planDetails: any) => {
+    // Set the selected destination for the trip planner
+    setSelectedDestination(planDetails.destination);
+    
+    // Store additional details for the trip planner to use
+    console.log('Generating plan with details:', planDetails);
+    
+    // Open the trip planner with the detailed information
+    setShowTripPlanner(true);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
       {/* Header */}
@@ -167,7 +191,10 @@ const Index = () => {
               Let AI plan your perfect trip with personalized recommendations and smart itineraries
             </p>
           </div>
-          <TrendingPlaces onPlaceClick={handleTrendingPlaceClick} />
+          <TrendingPlaces 
+            onPlaceClick={handleTrendingPlaceClick} 
+            onImageClick={handlePlaceImageClick}
+          />
         </div>
       </section>
 
@@ -192,6 +219,14 @@ const Index = () => {
         isOpen={showAuth}
         onClose={() => setShowAuth(false)}
         onLogin={handleLogin}
+      />
+
+      {/* Place Details Modal */}
+      <PlaceDetailsModal 
+        isOpen={showPlaceDetails}
+        onClose={() => setShowPlaceDetails(false)}
+        destination={selectedPlaceForDetails}
+        onGeneratePlan={handleGeneratePlanFromDetails}
       />
 
       {/* Smart Trip Planner Modal */}
