@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -23,6 +22,10 @@ import {
   CreditCard,
   FileCheck
 } from "lucide-react";
+import TransportationBooking from "./TransportationBooking";
+import BookingOptions from "./BookingOptions";
+import PaymentPage from "./PaymentPage";
+import TransactionStatus from "./TransactionStatus";
 
 interface SmartTripPlannerProps {
   isOpen: boolean;
@@ -87,6 +90,12 @@ const SmartTripPlanner = ({ isOpen, onClose, defaultDestination, defaultPlan }: 
     budget: '',
     interests: ''
   });
+  const [showTransportBooking, setShowTransportBooking] = useState(false);
+  const [showBookingOptions, setShowBookingOptions] = useState(false);
+  const [showPaymentPage, setShowPaymentPage] = useState(false);
+  const [showTransactionStatus, setShowTransactionStatus] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<any>(null);
+  const [paymentData, setPaymentData] = useState<any>(null);
 
   const handleGeneratePlans = () => {
     setIsGenerating(true);
@@ -104,6 +113,13 @@ const SmartTripPlanner = ({ isOpen, onClose, defaultDestination, defaultPlan }: 
 
   const handleCompleteStep = () => {
     const currentStepId = checklistSteps[currentChecklistStep].id;
+    
+    if (currentStepId === 'transport') {
+      // Show transportation booking modal
+      setShowTransportBooking(true);
+      return;
+    }
+    
     if (!completedSteps.includes(currentStepId)) {
       setCompletedSteps([...completedSteps, currentStepId]);
     }
@@ -116,263 +132,323 @@ const SmartTripPlanner = ({ isOpen, onClose, defaultDestination, defaultPlan }: 
     }
   };
 
+  const handleTransportBookingComplete = () => {
+    setShowTransportBooking(false);
+    setShowBookingOptions(true);
+  };
+
+  const handleBookNow = (option: any) => {
+    setSelectedBooking(option);
+    setShowBookingOptions(false);
+    setShowPaymentPage(true);
+  };
+
+  const handlePaymentComplete = (paymentDetails: any) => {
+    setPaymentData(paymentDetails);
+    setShowPaymentPage(false);
+    setShowTransactionStatus(true);
+  };
+
+  const handleTransactionSaved = (transaction: any) => {
+    // Mark transportation step as completed
+    if (!completedSteps.includes('transport')) {
+      setCompletedSteps([...completedSteps, 'transport']);
+    }
+    
+    if (currentChecklistStep < checklistSteps.length - 1) {
+      setCurrentChecklistStep(currentChecklistStep + 1);
+    }
+  };
+
   const currentPlanData = samplePlans[currentPlan];
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
-            <span>Smart Trip Planner</span>
-          </DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-white" />
+              </div>
+              <span>Smart Trip Planner</span>
+            </DialogTitle>
+          </DialogHeader>
 
-        {step === 'input' && (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-semibold mb-2">Plan your perfect trip</h3>
-              <p className="text-gray-600">AI-powered itinerary creation tailored just for you</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="destination">Destination</Label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="destination"
-                    placeholder="Where do you want to go?"
-                    className="pl-10"
-                    value={tripDetails.destination}
-                    onChange={(e) => setTripDetails({...tripDetails, destination: e.target.value})}
-                  />
-                </div>
+          {step === 'input' && (
+            <div className="space-y-6">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-semibold mb-2">Plan your perfect trip</h3>
+                <p className="text-gray-600">AI-powered itinerary creation tailored just for you</p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="duration">Duration</Label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="duration"
-                    placeholder="How many days?"
-                    className="pl-10"
-                    value={tripDetails.duration}
-                    onChange={(e) => setTripDetails({...tripDetails, duration: e.target.value})}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="travelers">Number of Travelers</Label>
-                <div className="relative">
-                  <Users className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="travelers"
-                    placeholder="How many people?"
-                    className="pl-10"
-                    value={tripDetails.travelers}
-                    onChange={(e) => setTripDetails({...tripDetails, travelers: e.target.value})}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="budget">Budget Range</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="budget"
-                    placeholder="Your budget range"
-                    className="pl-10"
-                    value={tripDetails.budget}
-                    onChange={(e) => setTripDetails({...tripDetails, budget: e.target.value})}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="interests">Interests & Preferences</Label>
-              <Input
-                id="interests"
-                placeholder="Adventure, culture, relaxation, food, nightlife..."
-                value={tripDetails.interests}
-                onChange={(e) => setTripDetails({...tripDetails, interests: e.target.value})}
-              />
-            </div>
-
-            <Button 
-              onClick={handleGeneratePlans}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-              disabled={isGenerating}
-            >
-              {isGenerating ? (
-                <>
-                  <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                  Generating Plans...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Generate Smart Plans
-                </>
-              )}
-            </Button>
-          </div>
-        )}
-
-        {step === 'plans' && !isGenerating && (
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold">Your AI-Generated Plans</h3>
-              <Badge variant="secondary">
-                Plan {currentPlan + 1} of {samplePlans.length}
-              </Badge>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-2xl">{currentPlanData.title}</CardTitle>
-                  <div className="text-right">
-                    <div className="text-sm text-gray-600">Feasibility Score</div>
-                    <div className="flex items-center space-x-2">
-                      <Progress value={currentPlanData.feasibilityScore} className="w-20" />
-                      <span className="font-bold text-lg">{currentPlanData.feasibilityScore}/100</span>
-                    </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="destination">Destination</Label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="destination"
+                      placeholder="Where do you want to go?"
+                      className="pl-10"
+                      value={tripDetails.destination}
+                      onChange={(e) => setTripDetails({...tripDetails, destination: e.target.value})}
+                    />
                   </div>
                 </div>
-                <div className="flex items-center space-x-4 text-sm text-gray-600">
-                  <span>{currentPlanData.duration}</span>
-                  <span>•</span>
-                  <span>{currentPlanData.estimatedCost}</span>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div>
-                    <h4 className="font-semibold mb-3">Highlights</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {currentPlanData.highlights.map((highlight, index) => (
-                        <Badge key={index} variant="outline">
-                          {highlight}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
 
-                  <div>
-                    <h4 className="font-semibold mb-3">Smart Itinerary</h4>
-                    <div className="space-y-3">
-                      {currentPlanData.itinerary.map((dayPlan) => (
-                        <div key={dayPlan.day} className="border rounded-lg p-4">
-                          <h5 className="font-medium mb-2">Day {dayPlan.day}</h5>
-                          <ul className="space-y-1">
-                            {dayPlan.activities.map((activity, index) => (
-                              <li key={index} className="flex items-center space-x-2 text-sm">
-                                <CheckCircle className="w-4 h-4 text-green-500" />
-                                <span>{activity}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
-                    </div>
+                <div className="space-y-2">
+                  <Label htmlFor="duration">Duration</Label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="duration"
+                      placeholder="How many days?"
+                      className="pl-10"
+                      value={tripDetails.duration}
+                      onChange={(e) => setTripDetails({...tripDetails, duration: e.target.value})}
+                    />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            <div className="flex items-center justify-between">
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentPlan(currentPlan > 0 ? currentPlan - 1 : 0)}
-                  disabled={currentPlan === 0}
-                >
-                  <ChevronLeft className="w-4 h-4 mr-2" />
-                  Previous Plan
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  onClick={() => setCurrentPlan(currentPlan < samplePlans.length - 1 ? currentPlan + 1 : 0)}
-                >
-                  {currentPlan < samplePlans.length - 1 ? 'Next Plan' : 'Regenerate'}
-                  <ChevronRight className="w-4 h-4 ml-2" />
-                </Button>
+                <div className="space-y-2">
+                  <Label htmlFor="travelers">Number of Travelers</Label>
+                  <div className="relative">
+                    <Users className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="travelers"
+                      placeholder="How many people?"
+                      className="pl-10"
+                      value={tripDetails.travelers}
+                      onChange={(e) => setTripDetails({...tripDetails, travelers: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="budget">Budget Range</Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                    <Input
+                      id="budget"
+                      placeholder="Your budget range"
+                      className="pl-10"
+                      value={tripDetails.budget}
+                      onChange={(e) => setTripDetails({...tripDetails, budget: e.target.value})}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="interests">Interests & Preferences</Label>
+                <Input
+                  id="interests"
+                  placeholder="Adventure, culture, relaxation, food, nightlife..."
+                  value={tripDetails.interests}
+                  onChange={(e) => setTripDetails({...tripDetails, interests: e.target.value})}
+                />
               </div>
 
               <Button 
-                onClick={handleSelectPlan}
-                className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600"
+                onClick={handleGeneratePlans}
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                disabled={isGenerating}
               >
-                <CheckCircle className="w-4 h-4 mr-2" />
-                Select This Plan
+                {isGenerating ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Generating Plans...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Generate Smart Plans
+                  </>
+                )}
               </Button>
             </div>
-          </div>
-        )}
+          )}
 
-        {step === 'checklist' && (
-          <div className="space-y-6">
-            <div className="text-center mb-6">
-              <h3 className="text-xl font-semibold mb-2">Complete Your Trip Setup</h3>
-              <p className="text-gray-600">Follow these steps to finalize your travel plans</p>
-            </div>
+          {step === 'plans' && !isGenerating && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold">Your AI-Generated Plans</h3>
+                <Badge variant="secondary">
+                  Plan {currentPlan + 1} of {samplePlans.length}
+                </Badge>
+              </div>
 
-            <div className="space-y-4">
-              {checklistSteps.map((stepItem, index) => {
-                const IconComponent = stepItem.icon;
-                const isCompleted = completedSteps.includes(stepItem.id);
-                const isCurrent = index === currentChecklistStep;
-                
-                return (
-                  <Card key={stepItem.id} className={`${isCurrent ? 'ring-2 ring-blue-500' : ''} ${isCompleted ? 'bg-green-50' : ''}`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center space-x-4">
-                        <Checkbox checked={isCompleted} disabled />
-                        <div className={`w-10 h-10 rounded-full ${isCompleted ? 'bg-green-500' : isCurrent ? 'bg-blue-500' : 'bg-gray-300'} flex items-center justify-center`}>
-                          <IconComponent className="w-5 h-5 text-white" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold">{stepItem.title}</h4>
-                          <p className="text-sm text-gray-600">{stepItem.description}</p>
-                        </div>
-                        {isCurrent && !isCompleted && (
-                          <Button onClick={handleCompleteStep} size="sm">
-                            Complete Step
-                          </Button>
-                        )}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-2xl">{currentPlanData.title}</CardTitle>
+                    <div className="text-right">
+                      <div className="text-sm text-gray-600">Feasibility Score</div>
+                      <div className="flex items-center space-x-2">
+                        <Progress value={currentPlanData.feasibilityScore} className="w-20" />
+                        <span className="font-bold text-lg">{currentPlanData.feasibilityScore}/100</span>
                       </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-4 text-sm text-gray-600">
+                    <span>{currentPlanData.duration}</span>
+                    <span>•</span>
+                    <span>{currentPlanData.estimatedCost}</span>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="font-semibold mb-3">Highlights</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {currentPlanData.highlights.map((highlight, index) => (
+                          <Badge key={index} variant="outline">
+                            {highlight}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
 
-            <div className="text-center">
-              <Progress value={(completedSteps.length / checklistSteps.length) * 100} className="w-full mb-4" />
-              <p className="text-sm text-gray-600">
-                {completedSteps.length} of {checklistSteps.length} steps completed
-              </p>
-            </div>
-          </div>
-        )}
+                    <div>
+                      <h4 className="font-semibold mb-3">Smart Itinerary</h4>
+                      <div className="space-y-3">
+                        {currentPlanData.itinerary.map((dayPlan) => (
+                          <div key={dayPlan.day} className="border rounded-lg p-4">
+                            <h5 className="font-medium mb-2">Day {dayPlan.day}</h5>
+                            <ul className="space-y-1">
+                              {dayPlan.activities.map((activity, index) => (
+                                <li key={index} className="flex items-center space-x-2 text-sm">
+                                  <CheckCircle className="w-4 h-4 text-green-500" />
+                                  <span>{activity}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-        {isGenerating && (
-          <div className="text-center py-12">
-            <RefreshCw className="w-12 h-12 mx-auto mb-4 animate-spin text-purple-500" />
-            <h3 className="text-xl font-semibold mb-2">Creating Your Perfect Trip</h3>
-            <p className="text-gray-600">AI is analyzing thousands of possibilities...</p>
-          </div>
-        )}
-      </DialogContent>
-    </Dialog>
+              <div className="flex items-center justify-between">
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentPlan(currentPlan > 0 ? currentPlan - 1 : 0)}
+                    disabled={currentPlan === 0}
+                  >
+                    <ChevronLeft className="w-4 h-4 mr-2" />
+                    Previous Plan
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    onClick={() => setCurrentPlan(currentPlan < samplePlans.length - 1 ? currentPlan + 1 : 0)}
+                  >
+                    {currentPlan < samplePlans.length - 1 ? 'Next Plan' : 'Regenerate'}
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+
+                <Button 
+                  onClick={handleSelectPlan}
+                  className="bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600"
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Select This Plan
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {step === 'checklist' && (
+            <div className="space-y-6">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-semibold mb-2">Complete Your Trip Setup</h3>
+                <p className="text-gray-600">Follow these steps to finalize your travel plans</p>
+              </div>
+
+              <div className="space-y-4">
+                {checklistSteps.map((stepItem, index) => {
+                  const IconComponent = stepItem.icon;
+                  const isCompleted = completedSteps.includes(stepItem.id);
+                  const isCurrent = index === currentChecklistStep;
+                  
+                  return (
+                    <Card key={stepItem.id} className={`${isCurrent ? 'ring-2 ring-blue-500' : ''} ${isCompleted ? 'bg-green-50' : ''}`}>
+                      <CardContent className="p-4">
+                        <div className="flex items-center space-x-4">
+                          <Checkbox checked={isCompleted} disabled />
+                          <div className={`w-10 h-10 rounded-full ${isCompleted ? 'bg-green-500' : isCurrent ? 'bg-blue-500' : 'bg-gray-300'} flex items-center justify-center`}>
+                            <IconComponent className="w-5 h-5 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold">{stepItem.title}</h4>
+                            <p className="text-sm text-gray-600">{stepItem.description}</p>
+                          </div>
+                          {isCurrent && !isCompleted && (
+                            <Button onClick={handleCompleteStep} size="sm">
+                              Complete Step
+                            </Button>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              <div className="text-center">
+                <Progress value={(completedSteps.length / checklistSteps.length) * 100} className="w-full mb-4" />
+                <p className="text-sm text-gray-600">
+                  {completedSteps.length} of {checklistSteps.length} steps completed
+                </p>
+              </div>
+            </div>
+          )}
+
+          {isGenerating && (
+            <div className="text-center py-12">
+              <RefreshCw className="w-12 h-12 mx-auto mb-4 animate-spin text-purple-500" />
+              <h3 className="text-xl font-semibold mb-2">Creating Your Perfect Trip</h3>
+              <p className="text-gray-600">AI is analyzing thousands of possibilities...</p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Transportation Booking Modal */}
+      <TransportationBooking 
+        isOpen={showTransportBooking}
+        onClose={() => setShowTransportBooking(false)}
+        onBookingComplete={handleTransportBookingComplete}
+      />
+
+      {/* Booking Options Modal */}
+      <BookingOptions 
+        isOpen={showBookingOptions}
+        onClose={() => setShowBookingOptions(false)}
+        onBookNow={handleBookNow}
+      />
+
+      {/* Payment Page Modal */}
+      <PaymentPage 
+        isOpen={showPaymentPage}
+        onClose={() => setShowPaymentPage(false)}
+        bookingDetails={selectedBooking}
+        onPaymentComplete={handlePaymentComplete}
+      />
+
+      {/* Transaction Status Modal */}
+      <TransactionStatus 
+        isOpen={showTransactionStatus}
+        onClose={() => setShowTransactionStatus(false)}
+        paymentData={paymentData}
+        onTransactionSaved={handleTransactionSaved}
+      />
+    </>
   );
 };
 

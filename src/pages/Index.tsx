@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,6 +22,7 @@ import SmartTripPlanner from "@/components/SmartTripPlanner";
 import AITranslator from "@/components/AITranslator";
 import AIBookings from "@/components/AIBookings";
 import HamburgerMenu from "@/components/HamburgerMenu";
+import TransactionsList from "@/components/TransactionsList";
 
 const Index = () => {
   const [showAuth, setShowAuth] = useState(false);
@@ -33,6 +33,8 @@ const Index = () => {
   const [showBookings, setShowBookings] = useState(false);
   const [user, setUser] = useState(null);
   const [selectedDestination, setSelectedDestination] = useState<string>('');
+
+  const [showTransactions, setShowTransactions] = useState(false);
 
   const handleFeatureClick = (feature: string) => {
     if (!isLoggedIn) {
@@ -83,7 +85,7 @@ const Index = () => {
         setShowTripPlanner(true);
         break;
       case 'transactions':
-        console.log('Opening transactions');
+        setShowTransactions(true);
         break;
       case 'saved-places':
         console.log('Opening saved places');
@@ -218,6 +220,12 @@ const Index = () => {
       <AIBookings 
         isOpen={showBookings}
         onClose={() => setShowBookings(false)}
+      />
+
+      {/* Transactions Modal */}
+      <TransactionsList 
+        isOpen={showTransactions}
+        onClose={() => setShowTransactions(false)}
       />
     </div>
   );
