@@ -18,6 +18,11 @@ import BookingSuccess from "./pages/BookingSuccess";
 import HotelBooking from "./pages/HotelBooking";
 import HotelPayment from "./pages/HotelPayment";
 import PaymentStatus from "./pages/PaymentStatus";
+import HotelBookingSuccess from "./pages/HotelBookingSuccess";
+import TripPaymentSummary from "./pages/TripPaymentSummary";
+import TripPaymentMethods from "./pages/TripPaymentMethods";
+import TripPaymentDetails from "./pages/TripPaymentDetails";
+import TripPaymentStatus from "./pages/TripPaymentStatus";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +47,11 @@ const App = () => (
           <Route path="/hotel-booking" component={HotelBooking} />
           <Route path="/hotel-payment" component={HotelPayment} />
           <Route path="/payment-status" component={PaymentStatus} />
+          <Route path="/hotel-booking-success" component={HotelBookingSuccess} />
+          <Route path="/trip-payment-summary" component={TripPaymentSummary} />
+          <Route path="/trip-payment-methods" component={TripPaymentMethods} />
+          <Route path="/trip-payment-details" component={TripPaymentDetails} />
+          <Route path="/trip-payment-status" component={TripPaymentStatus} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route component={NotFound} />
         </Switch>

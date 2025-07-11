@@ -272,22 +272,22 @@ const BookingFlow = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5 text-green-600" />
-                Final Plan Confirmation
+                Transportation Confirmed
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="text-center py-8">
                   <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">Booking Confirmed!</h3>
-                  <p className="text-gray-600">Your trip has been successfully booked</p>
+                  <h3 className="text-xl font-semibold mb-2">Transportation Booked!</h3>
+                  <p className="text-gray-600">Your transportation is confirmed. Continue to hotel booking.</p>
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg">
                   <h4 className="font-medium mb-2">Booking Reference</h4>
                   <p className="text-sm text-green-700">TRP-{Date.now()}</p>
                 </div>
-                <Button onClick={handleComplete} className="w-full">
-                  Complete Booking
+                <Button onClick={() => setLocation('/hotel-booking-success')} className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600">
+                  Continue to Hotel Booking
                 </Button>
               </div>
             </CardContent>

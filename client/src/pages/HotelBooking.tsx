@@ -153,7 +153,7 @@ const HotelBooking = () => {
     
     // Store booking data for payment page
     localStorage.setItem('hotelBookingData', JSON.stringify(bookingData));
-    setLocation('/hotel-payment');
+    setLocation('/hotel-booking-success');
   };
 
   if (selectedHotel) {
