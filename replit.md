@@ -8,6 +8,8 @@ Pack Your Bags is a full-stack web application designed as an AI-powered travel 
 
 **Transportation Booking System**: Implemented comprehensive transportation booking mechanism with PostgreSQL database integration (January 11, 2025), including detailed transport selection, payment processing, and transaction tracking.
 
+**Video Hover Functionality & Saved Places**: Added interactive video playback on hover for travel destination videos with Pexels video integration (January 11, 2025). Implemented saved places feature with heart button functionality, allowing users to save favorite destinations to their profile with full database persistence.
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.

@@ -1,6 +1,6 @@
-import { users, transactions, type User, type InsertUser, type Transaction, type InsertTransaction } from "@shared/schema";
+import { users, transactions, savedPlaces, type User, type InsertUser, type Transaction, type InsertTransaction, type SavedPlace, type InsertSavedPlace } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 // modify the interface with any CRUD methods
 // you might need
@@ -13,6 +13,10 @@ export interface IStorage {
   getTransactionsByUser(userId: number): Promise<Transaction[]>;
   getTransactionById(id: number): Promise<Transaction | undefined>;
   updateTransactionStatus(id: number, status: string): Promise<Transaction | undefined>;
+  getSavedPlacesByUser(userId: number): Promise<SavedPlace[]>;
+  createSavedPlace(savedPlace: InsertSavedPlace): Promise<SavedPlace>;
+  removeSavedPlace(userId: number, placeId: string): Promise<void>;
+  isPlaceSaved(userId: number, placeId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -59,19 +63,49 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return transaction || undefined;
   }
+
+  async getSavedPlacesByUser(userId: number): Promise<SavedPlace[]> {
+    return await db.select().from(savedPlaces).where(eq(savedPlaces.userId, userId));
+  }
+
+  async createSavedPlace(insertSavedPlace: InsertSavedPlace): Promise<SavedPlace> {
+    const [savedPlace] = await db
+      .insert(savedPlaces)
+      .values(insertSavedPlace)
+      .returning();
+    return savedPlace;
+  }
+
+  async removeSavedPlace(userId: number, placeId: string): Promise<void> {
+    await db
+      .delete(savedPlaces)
+      .where(and(eq(savedPlaces.userId, userId), eq(savedPlaces.placeId, placeId)));
+  }
+
+  async isPlaceSaved(userId: number, placeId: string): Promise<boolean> {
+    const [place] = await db
+      .select()
+      .from(savedPlaces)
+      .where(and(eq(savedPlaces.userId, userId), eq(savedPlaces.placeId, placeId)));
+    return !!place;
+  }
 }
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private transactions: Map<number, Transaction>;
+  private savedPlaces: Map<number, SavedPlace>;
   currentId: number;
   currentTransactionId: number;
+  currentSavedPlaceId: number;
 
   constructor() {
     this.users = new Map();
     this.transactions = new Map();
+    this.savedPlaces = new Map();
     this.currentId = 1;
     this.currentTransactionId = 1;
+    this.currentSavedPlaceId = 1;
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -122,6 +156,40 @@ export class MemStorage implements IStorage {
       return transaction;
     }
     return undefined;
+  }
+
+  async getSavedPlacesByUser(userId: number): Promise<SavedPlace[]> {
+    return Array.from(this.savedPlaces.values()).filter(
+      (place) => place.userId === userId,
+    );
+  }
+
+  async createSavedPlace(insertSavedPlace: InsertSavedPlace): Promise<SavedPlace> {
+    const id = this.currentSavedPlaceId++;
+    const now = new Date();
+    const savedPlace: SavedPlace = { 
+      ...insertSavedPlace, 
+      id,
+      createdAt: now 
+    };
+    this.savedPlaces.set(id, savedPlace);
+    return savedPlace;
+  }
+
+  async removeSavedPlace(userId: number, placeId: string): Promise<void> {
+    const entries = Array.from(this.savedPlaces.entries());
+    for (const [key, place] of entries) {
+      if (place.userId === userId && place.placeId === placeId) {
+        this.savedPlaces.delete(key);
+        break;
+      }
+    }
+  }
+
+  async isPlaceSaved(userId: number, placeId: string): Promise<boolean> {
+    return Array.from(this.savedPlaces.values()).some(
+      (place) => place.userId === userId && place.placeId === placeId,
+    );
   }
 }
 

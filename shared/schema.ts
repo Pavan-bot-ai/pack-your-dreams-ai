@@ -20,6 +20,16 @@ export const transactions = pgTable("transactions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const savedPlaces = pgTable("saved_places", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  placeId: text("place_id").notNull(),
+  title: text("title").notNull(),
+  location: text("location").notNull(),
+  thumbnail: text("thumbnail").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -35,7 +45,17 @@ export const insertTransactionSchema = createInsertSchema(transactions).pick({
   bookingDetails: true,
 });
 
+export const insertSavedPlaceSchema = createInsertSchema(savedPlaces).pick({
+  userId: true,
+  placeId: true,
+  title: true,
+  location: true,
+  thumbnail: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
+export type InsertSavedPlace = z.infer<typeof insertSavedPlaceSchema>;
+export type SavedPlace = typeof savedPlaces.$inferSelect;
