@@ -19,6 +19,7 @@ import {
   History,
   Heart
 } from "lucide-react";
+import { useLocation } from "wouter";
 
 interface HamburgerMenuProps {
   isLoggedIn: boolean;
@@ -27,18 +28,23 @@ interface HamburgerMenuProps {
 
 const HamburgerMenu = ({ isLoggedIn, onMenuItemClick }: HamburgerMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [, setLocation] = useLocation();
 
   const menuItems = [
-    { id: 'booked-plans', label: 'Booked Plans', icon: Calendar, requiresAuth: true },
-    { id: 'transactions', label: 'Transactions', icon: CreditCard, requiresAuth: true },
-    { id: 'saved-places', label: 'Saved Places', icon: Heart, requiresAuth: true },
-    { id: 'trip-history', label: 'Trip History', icon: History, requiresAuth: true },
-    { id: 'profile', label: 'Profile', icon: User, requiresAuth: true },
-    { id: 'settings', label: 'Settings', icon: Settings, requiresAuth: false },
+    { id: 'booked-plans', label: 'Booked Plans', icon: Calendar, requiresAuth: true, route: '/booked-plans' },
+    { id: 'transactions', label: 'Transactions', icon: CreditCard, requiresAuth: true, route: '/transactions' },
+    { id: 'saved-places', label: 'Saved Places', icon: Heart, requiresAuth: true, route: '/saved-places' },
+    { id: 'trip-history', label: 'Trip History', icon: History, requiresAuth: true, route: '/trip-history' },
+    { id: 'profile', label: 'Profile', icon: User, requiresAuth: true, route: '/profile' },
+    { id: 'settings', label: 'Settings', icon: Settings, requiresAuth: false, route: '/settings' },
   ];
 
-  const handleItemClick = (itemId: string) => {
-    onMenuItemClick(itemId);
+  const handleItemClick = (itemId: string, route?: string) => {
+    if (route) {
+      setLocation(route);
+    } else {
+      onMenuItemClick(itemId);
+    }
     setIsOpen(false);
   };
 
@@ -69,7 +75,7 @@ const HamburgerMenu = ({ isLoggedIn, onMenuItemClick }: HamburgerMenuProps) => {
                 className={`w-full justify-start h-12 ${
                   isDisabled ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
-                onClick={() => !isDisabled && handleItemClick(item.id)}
+                onClick={() => !isDisabled && handleItemClick(item.id, item.route)}
                 disabled={isDisabled}
               >
                 <IconComponent className="mr-3 h-5 w-5" />
