@@ -5,6 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight, CheckCircle, Plane, Building, CreditCard, FileText, MapPin } from "lucide-react";
 import { useLocation } from "wouter";
+import TransportSelection from "@/components/TransportSelection";
+import TransportPayment from "@/components/TransportPayment";
+import PaymentStatus from "@/components/PaymentStatus";
 
 interface BookingStep {
   id: number;
@@ -17,10 +20,14 @@ const BookingFlow = () => {
   const [, setLocation] = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
+  const [transportMode, setTransportMode] = useState<string>("");
+  const [selectedTransport, setSelectedTransport] = useState<any>(null);
+  const [paymentResult, setPaymentResult] = useState<any>(null);
+  const [isTransportCompleted, setIsTransportCompleted] = useState(false);
 
   const steps: BookingStep[] = [
     { id: 1, title: "Plan Selection", icon: FileText, completed: currentStep > 1 },
-    { id: 2, title: "Transport Booking", icon: Plane, completed: currentStep > 2 },
+    { id: 2, title: "Transport Booking", icon: Plane, completed: isTransportCompleted },
     { id: 3, title: "Hotel Booking", icon: Building, completed: currentStep > 3 },
     { id: 4, title: "Payment", icon: CreditCard, completed: currentStep > 4 },
     { id: 5, title: "Final Plan", icon: CheckCircle, completed: currentStep > 5 }
@@ -47,6 +54,18 @@ const BookingFlow = () => {
       setCurrentStep(nextStep);
       window.history.replaceState(null, '', `/booking-flow?step=${nextStep}`);
     }
+  };
+
+  const handleTransportPaymentComplete = (paymentDetails: any) => {
+    setPaymentResult(paymentDetails);
+    if (paymentDetails.status === "success") {
+      setIsTransportCompleted(true);
+    }
+  };
+
+  const handleTransportComplete = () => {
+    setCurrentStep(3); // Move to hotel booking
+    window.history.replaceState(null, '', `/booking-flow?step=3`);
   };
 
   const handlePrevStep = () => {
@@ -118,40 +137,63 @@ const BookingFlow = () => {
         );
 
       case 2:
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Plane className="h-5 w-5" />
-                Transport Booking
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid gap-4">
-                  <div className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="font-medium">Economy Flight</h4>
-                        <p className="text-sm text-gray-600">Direct flight, 8 hours</p>
-                      </div>
-                      <span className="font-semibold">$450</span>
-                    </div>
-                  </div>
-                  <div className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer border-blue-200 bg-blue-50">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="font-medium">Business Class</h4>
-                        <p className="text-sm text-gray-600">Direct flight, premium service</p>
-                      </div>
-                      <span className="font-semibold">$1,200</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
+        if (!selectedTransport) {
+          return (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Plane className="h-5 w-5" />
+                  Transport Booking
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TransportSelection
+                  onModeSelect={setTransportMode}
+                  selectedMode={transportMode}
+                  onOptionSelect={setSelectedTransport}
+                  selectedOption={selectedTransport}
+                  onNext={() => setCurrentStep(2.5)} // Move to payment
+                />
+              </CardContent>
+            </Card>
+          );
+        } else if (currentStep === 2.5 && !paymentResult) {
+          return (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Transport Payment
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TransportPayment
+                  amount={selectedTransport.price}
+                  onPaymentComplete={handleTransportPaymentComplete}
+                  bookingDetails={selectedTransport}
+                />
+              </CardContent>
+            </Card>
+          );
+        } else if (paymentResult) {
+          return (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5" />
+                  Payment Status
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <PaymentStatus
+                  paymentResult={paymentResult}
+                  onContinue={handleTransportComplete}
+                />
+              </CardContent>
+            </Card>
+          );
+        }
+        break;
 
       case 3:
         return (
@@ -325,14 +367,16 @@ const BookingFlow = () => {
             Previous
           </Button>
 
-          <Button
-            onClick={currentStep === 5 ? handleComplete : handleNextStep}
-            disabled={currentStep === 5}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
-          >
-            {currentStep === 5 ? "Complete" : "Next"}
-            {currentStep !== 5 && <ArrowRight className="h-4 w-4 ml-2" />}
-          </Button>
+          {currentStep !== 2 && currentStep !== 2.5 && (
+            <Button
+              onClick={currentStep === 5 ? handleComplete : handleNextStep}
+              disabled={currentStep === 5}
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+            >
+              {currentStep === 5 ? "Complete" : "Next"}
+              {currentStep !== 5 && <ArrowRight className="h-4 w-4 ml-2" />}
+            </Button>
+          )}
         </div>
       </div>
     </div>

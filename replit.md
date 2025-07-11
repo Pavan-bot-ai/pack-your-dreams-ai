@@ -6,6 +6,8 @@ Pack Your Bags is a full-stack web application designed as an AI-powered travel 
 
 **Recent Migration**: Successfully migrated from Lovable to Replit environment (January 11, 2025), including routing updates from react-router-dom to wouter and implementation of comprehensive navigation system with dedicated pages for all main features.
 
+**Transportation Booking System**: Implemented comprehensive transportation booking mechanism with PostgreSQL database integration (January 11, 2025), including detailed transport selection, payment processing, and transaction tracking.
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -48,14 +50,16 @@ The application follows a monorepo structure with a React frontend and Express.j
 ## Data Flow
 
 ### Database Schema
-The application uses a simple user authentication schema with:
-- Users table with username and password fields
+The application uses PostgreSQL with the following tables:
+- Users table with username and password fields for authentication
+- Transactions table for storing booking payments and transaction history
 - Extensible schema structure for future travel-related entities
 
 ### Storage Layer
 - **Production**: PostgreSQL database with Drizzle ORM
 - **Development**: In-memory storage implementation for rapid prototyping
 - **Interface**: Abstract storage interface enabling easy switching between implementations
+- **Transaction Management**: Complete CRUD operations for booking transactions and payment history
 
 ### Authentication Flow
 - Modal-based authentication system
@@ -66,10 +70,15 @@ The application uses a simple user authentication schema with:
 1. **Smart Trip Planner**: AI-powered itinerary generation with customizable preferences
 2. **Local Guide Services**: Personalized recommendations and local insights
 3. **Real-time Translation**: Multi-language support with voice and text input
-4. **Booking Management**: Integrated booking system for transportation and accommodations
+4. **Comprehensive Transportation Booking**: Full 5-step booking flow with:
+   - Transport mode selection (Flight, Train, Bus, Car Rental)
+   - Detailed booking options with ratings, comfort levels, and amenities
+   - Multi-payment method processing (Credit/Debit Card, Digital Wallet, Bank Transfer, UPI)
+   - Real-time payment status tracking with database integration
+   - Transaction history with filtering and search capabilities
 5. **User Account System**: Complete navigation system with dedicated pages for:
    - Booked Plans (trip management and cancellation)
-   - Transactions (payment history and details)
+   - Transactions (payment history and details with database integration)
    - Saved Places (favorite destinations)
    - Trip History (completed travel records)
    - Profile (user information and travel preferences)
