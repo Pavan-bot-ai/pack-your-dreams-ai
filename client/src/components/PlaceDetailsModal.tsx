@@ -97,19 +97,31 @@ const PlaceDetailsModal = ({ isOpen, onClose, destination, onGeneratePlan }: Pla
   };
 
   const handleSelectPlan = () => {
-    const planDetails = {
+    const tripDetails = {
       destination,
-      startDate,
-      endDate,
+      startDate: startDate?.toISOString(),
+      endDate: endDate?.toISOString(),
       travelers: parseInt(travelers),
       budget,
       interest: selectedInterest,
-      duration: `${Math.ceil((endDate!.getTime() - startDate!.getTime()) / (1000 * 60 * 60 * 24))} days`,
+      duration: `${Math.ceil((endDate!.getTime() - startDate!.getTime()) / (1000 * 60 * 60 * 24))} days`
+    };
+
+    const planDetails = {
+      tripDetails,
       selectedPlan: samplePlans[currentPlan]
     };
 
-    onGeneratePlan(planDetails);
+    // Store selected plan and navigate directly to booking flow
+    localStorage.setItem('selectedPlan', JSON.stringify(planDetails));
+    
+    // Close modal and navigate to booking flow
     onClose();
+    
+    // Navigate to booking flow
+    setTimeout(() => {
+      window.location.href = '/booking-flow?step=1';
+    }, 100);
   };
 
   const resetForm = () => {
