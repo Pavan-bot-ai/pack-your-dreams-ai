@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Play, Star, MapPin, Heart } from "lucide-react";
 import { useState, useRef } from "react";
+import VideoModal from "./VideoModal";
 
 const videoReels = [
   {
@@ -10,7 +11,7 @@ const videoReels = [
     title: "Hidden Gems of Tokyo",
     location: "Tokyo, Japan",
     thumbnail: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=300&h=400&fit=crop",
-    videoUrl: "/attached_assets/hidden gems of tokyo_1752216724766.mp4",
+    videoUrl: "/attached_assets/tokyo_city.mp4",
     rating: 4.8,
     views: "2.3M",
     duration: "3:45",
@@ -32,7 +33,7 @@ const videoReels = [
     title: "Swiss Mountain Adventure",
     location: "Swiss Alps",
     thumbnail: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300&h=400&fit=crop",
-    videoUrl: "/attached_assets/14038364_1080_1920_60fps_1752215865313.mp4",
+    videoUrl: "/attached_assets/swiss_alps_adventure.mp4",
     rating: 4.7,
     views: "950K",
     duration: "4:12",
@@ -43,7 +44,7 @@ const videoReels = [
     title: "Santorini Blue Domes",
     location: "Santorini, Greece",
     thumbnail: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=300&h=400&fit=crop",
-    videoUrl: "/attached_assets/5846684-uhd_4096_2160_24fps_1752215867278.mp4",
+    videoUrl: "/attached_assets/santorini_blue_domes.mp4",
     rating: 4.9,
     views: "3.1M",
     duration: "2:15",
@@ -54,7 +55,7 @@ const videoReels = [
     title: "Dubai Skyline at Night",
     location: "Dubai, UAE",
     thumbnail: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=300&h=400&fit=crop",
-    videoUrl: "/attached_assets/14038364_1080_1920_60fps_1752215865313.mp4",
+    videoUrl: "/attached_assets/dubai_skyline_night.mp4",
     rating: 4.6,
     views: "1.2M",
     duration: "3:20",
@@ -65,7 +66,7 @@ const videoReels = [
     title: "Machu Picchu Sunrise",
     location: "Machu Picchu, Peru",
     thumbnail: "https://images.unsplash.com/photo-1526392060635-9d6019884377?w=300&h=400&fit=crop",
-    videoUrl: "/attached_assets/5846684-uhd_4096_2160_24fps_1752215867278.mp4",
+    videoUrl: "/attached_assets/machu_picchu_sunrise.mp4",
     rating: 4.8,
     views: "890K",
     duration: "5:00",
@@ -76,6 +77,7 @@ const videoReels = [
 const VideoReels = () => {
   const [savedPlaces, setSavedPlaces] = useState<Set<number>>(new Set());
   const [hoveredVideo, setHoveredVideo] = useState<number | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<number | null>(null);
   const videoRefs = useRef<{ [key: number]: HTMLVideoElement | null }>({});
 
   const handleHeartClick = async (reel: any) => {
@@ -143,17 +145,29 @@ const VideoReels = () => {
     }
   };
 
+  const handleVideoClick = (reelId: number) => {
+    setSelectedVideo(reelId);
+  };
+
+  const closeVideoModal = () => {
+    setSelectedVideo(null);
+  };
+
+  const selectedReel = selectedVideo ? videoReels.find(reel => reel.id === selectedVideo) : null;
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {videoReels.map((reel) => (
-        <Card 
-          key={reel.id} 
-          className="group cursor-pointer card-hover overflow-hidden"
-          onMouseEnter={() => handleVideoHover(reel.id, true)}
-          onMouseLeave={() => handleVideoHover(reel.id, false)}
-        >
-          <CardContent className="p-0">
-            <div className="relative">
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {videoReels.map((reel) => (
+          <Card 
+            key={reel.id} 
+            className="group cursor-pointer card-hover overflow-hidden"
+            onMouseEnter={() => handleVideoHover(reel.id, true)}
+            onMouseLeave={() => handleVideoHover(reel.id, false)}
+            onClick={() => handleVideoClick(reel.id)}
+          >
+            <CardContent className="p-0">
+              <div className="relative">
               {/* Video element */}
               <video
                 ref={(el) => videoRefs.current[reel.id] = el}
@@ -226,9 +240,9 @@ const VideoReels = () => {
                   {reel.views} views
                 </Badge>
               </div>
-            </div>
+              </div>
 
-            <div className="p-4">
+              <div className="p-4">
               <h4 className="font-semibold text-lg mb-2 line-clamp-2">{reel.title}</h4>
               
               <div className="flex items-center space-x-2 mb-2">
@@ -243,11 +257,26 @@ const VideoReels = () => {
                 </div>
                 <span className="text-sm text-gray-500">@{reel.author}</span>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+              </div>
+            </CardContent>
+          </Card>
       ))}
     </div>
+
+    {/* Video Modal */}
+    {selectedReel && (
+      <VideoModal
+        isOpen={selectedVideo !== null}
+        videoUrl={selectedReel.videoUrl}
+        title={selectedReel.title}
+        location={selectedReel.location}
+        author={selectedReel.author}
+        onClose={closeVideoModal}
+        onHeartClick={() => handleHeartClick(selectedReel)}
+        isLiked={savedPlaces.has(selectedReel.id)}
+      />
+    )}
+    </>
   );
 };
 
