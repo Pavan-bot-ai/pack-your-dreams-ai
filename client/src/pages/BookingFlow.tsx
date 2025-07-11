@@ -50,7 +50,28 @@ const BookingFlow = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const step = urlParams.get('step');
     if (step) {
-      setCurrentStep(parseInt(step));
+      const stepNumber = parseInt(step);
+      setCurrentStep(stepNumber);
+      
+      // If we're on step 4 or later, it means hotel booking is complete
+      if (stepNumber >= 4) {
+        setHotelBookingComplete(true);
+      }
+    }
+
+    // Check if hotel booking is complete from localStorage
+    const hotelBookingStatus = localStorage.getItem('hotelBookingComplete');
+    if (hotelBookingStatus === 'true') {
+      setHotelBookingComplete(true);
+    }
+
+    // Check if returning from hotel booking
+    const returnStep = localStorage.getItem('returnToBookingFlow');
+    if (returnStep === 'step4') {
+      setCurrentStep(4);
+      setHotelBookingComplete(true);
+      localStorage.removeItem('returnToBookingFlow'); // Clean up
+      window.history.replaceState(null, '', `/booking-flow?step=4`);
     }
   }, []);
 
@@ -278,19 +299,6 @@ const BookingFlow = () => {
                   paymentResult={paymentResult}
                   onContinue={handleTransportComplete}
                 />
-                {paymentResult.status === 'success' && (
-                  <div className="mt-6 text-center">
-                    <Button 
-                      onClick={handleHotelBookingComplete}
-                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-3 text-lg font-semibold rounded-xl shadow-lg"
-                    >
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="w-5 h-5" />
-                        View Final Plan
-                      </div>
-                    </Button>
-                  </div>
-                )}
               </CardContent>
             </Card>
           );
@@ -358,7 +366,14 @@ const BookingFlow = () => {
                   <h3 className="text-xl font-semibold mb-2">Transportation Booked!</h3>
                   <p className="text-gray-600">Your transport has been successfully booked. Now let's book your hotel.</p>
                 </div>
-                <Button onClick={() => setLocation('/hotel-booking')} className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
+                <Button 
+                  onClick={() => {
+                    // Set localStorage flag so when user comes back we know hotel booking is complete
+                    localStorage.setItem('returnToBookingFlow', 'step4');
+                    setLocation('/hotel-booking');
+                  }} 
+                  className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                >
                   Continue to Hotel Booking
                 </Button>
               </div>
@@ -367,6 +382,45 @@ const BookingFlow = () => {
         );
 
       case 4:
+        // Check if hotel booking is complete - this step represents hotel payment completion
+        if (hotelBookingComplete) {
+          return (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  Hotel Booking Completed
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="text-center py-8">
+                    <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">Hotel Booking Successful!</h3>
+                    <p className="text-gray-600">Your hotel has been successfully booked. All payments completed.</p>
+                  </div>
+                  <div className="bg-green-50 rounded-lg p-4">
+                    <h4 className="font-medium mb-2">Booking Reference</h4>
+                    <p className="text-sm text-green-700">HTL-{Date.now()}</p>
+                  </div>
+                  <div className="text-center">
+                    <Button 
+                      onClick={handleHotelBookingComplete}
+                      className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-3 text-lg font-semibold rounded-xl shadow-lg"
+                    >
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-5 h-5" />
+                        View Final Plan
+                      </div>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        }
+        
+        // Default step 4 content
         return (
           <Card>
             <CardHeader>
@@ -399,7 +453,12 @@ const BookingFlow = () => {
                     </div>
                   </div>
                 </div>
-                <Button className="w-full">Proceed to Payment</Button>
+                <Button 
+                  onClick={() => setHotelBookingComplete(true)}
+                  className="w-full"
+                >
+                  Proceed to Payment
+                </Button>
               </div>
             </CardContent>
           </Card>
