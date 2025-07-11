@@ -100,6 +100,39 @@ const BookingFlow = () => {
     setCurrentStep(5); // Move to final plan review
     window.history.replaceState(null, '', `/booking-flow?step=5`);
     
+    // Calculate budget-based hotel allocation
+    const userBudget = selectedPlan?.tripDetails?.budget || selectedPlan?.budget || 5000;
+    const budgetInCents = parseInt(userBudget) * 100;
+    
+    // Budget-based allocation percentages
+    let hotelPercentage = 0.45; // Default 45% for hotel
+    let transportPercentage = 0.35; // Default 35% for transport
+    let itineraryPercentage = 0.20; // Default 20% for activities
+    
+    // Adjust allocation based on budget range
+    if (budgetInCents >= 1000000) { // $10,000+ - Luxury travel
+      hotelPercentage = 0.55; // 55% for luxury hotels
+      transportPercentage = 0.30; // 30% for premium transport
+      itineraryPercentage = 0.15; // 15% for exclusive activities
+    } else if (budgetInCents >= 500000) { // $5,000+ - Premium travel
+      hotelPercentage = 0.50; // 50% for premium hotels
+      transportPercentage = 0.32; // 32% for good transport
+      itineraryPercentage = 0.18; // 18% for quality activities
+    } else if (budgetInCents >= 200000) { // $2,000+ - Mid-range travel
+      hotelPercentage = 0.45; // 45% for mid-range hotels
+      transportPercentage = 0.35; // 35% for standard transport
+      itineraryPercentage = 0.20; // 20% for standard activities
+    } else { // Budget travel
+      hotelPercentage = 0.40; // 40% for budget hotels
+      transportPercentage = 0.40; // 40% for budget transport
+      itineraryPercentage = 0.20; // 20% for budget activities
+    }
+    
+    // Calculate amounts based on percentages
+    const calculatedHotelAmount = Math.round(budgetInCents * hotelPercentage);
+    const calculatedTransportAmount = selectedTransport?.price * 100 || Math.round(budgetInCents * transportPercentage);
+    const calculatedItineraryAmount = Math.round(budgetInCents * itineraryPercentage);
+    
     // Prepare final plan data
     const finalPlanData = {
       planDetails: selectedPlan?.tripDetails || {},
@@ -107,11 +140,17 @@ const BookingFlow = () => {
       hotelDetails: JSON.parse(localStorage.getItem('selectedHotel') || '{}'),
       itineraryDetails: selectedPlan?.selectedPlan || {},
       paymentDetails: {
-        transportAmount: selectedTransport?.price * 100 || 89900,
-        hotelAmount: 149900,
-        itineraryAmount: 29900,
-        totalAmount: (selectedTransport?.price * 100 || 89900) + 149900 + 29900,
-        paymentMethod: 'Credit Card'
+        transportAmount: calculatedTransportAmount,
+        hotelAmount: calculatedHotelAmount,
+        itineraryAmount: calculatedItineraryAmount,
+        totalAmount: calculatedTransportAmount + calculatedHotelAmount + calculatedItineraryAmount,
+        paymentMethod: 'Credit Card',
+        budgetBreakdown: {
+          totalBudget: budgetInCents,
+          hotelPercentage: Math.round(hotelPercentage * 100),
+          transportPercentage: Math.round(transportPercentage * 100),
+          itineraryPercentage: Math.round(itineraryPercentage * 100)
+        }
       }
     };
     

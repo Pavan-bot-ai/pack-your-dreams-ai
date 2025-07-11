@@ -186,9 +186,8 @@ const HotelPayment = () => {
     setIsProcessing(true);
     
     try {
-      // Generate random transaction outcome
-      const outcomes = ['successful', 'pending', 'unsuccessful'];
-      const randomOutcome = outcomes[Math.floor(Math.random() * outcomes.length)];
+      // Always successful payment outcome
+      const randomOutcome = 'successful';
       
       // Create transaction record with proper schema
       const transactionData = {

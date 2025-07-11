@@ -79,7 +79,9 @@ const PaymentPage = ({ isOpen, onClose, bookingDetails, onPaymentComplete }: Pay
       amount: bookingDetails?.price || 299,
       details: paymentDetails,
       bookingId: bookingDetails?.id,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
+      status: "success", // Always successful
+      transactionId: `TXN-${Date.now()}`
     };
     onPaymentComplete(paymentData);
   };

@@ -216,19 +216,45 @@ const FinalPlanPage = ({ isOpen, onClose, planData, onFinishBooking }: FinalPlan
                 <CreditCard className="w-5 h-5 text-green-600" />
                 Payment Summary
               </CardTitle>
+              {planData.paymentDetails?.budgetBreakdown && (
+                <CardDescription>
+                  Smart budget allocation based on your {formatCurrency(planData.paymentDetails.budgetBreakdown.totalBudget)} budget
+                </CardDescription>
+              )}
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span>Transportation</span>
+                  <div className="flex items-center gap-2">
+                    <span>Transportation</span>
+                    {planData.paymentDetails?.budgetBreakdown && (
+                      <Badge variant="outline" className="text-xs">
+                        {planData.paymentDetails.budgetBreakdown.transportPercentage}%
+                      </Badge>
+                    )}
+                  </div>
                   <span className="font-medium">{formatCurrency(planData.paymentDetails?.transportAmount || 89900)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Accommodation</span>
+                  <div className="flex items-center gap-2">
+                    <span>Accommodation</span>
+                    {planData.paymentDetails?.budgetBreakdown && (
+                      <Badge variant="outline" className="text-xs">
+                        {planData.paymentDetails.budgetBreakdown.hotelPercentage}%
+                      </Badge>
+                    )}
+                  </div>
                   <span className="font-medium">{formatCurrency(planData.paymentDetails?.hotelAmount || 149900)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Itinerary & Activities</span>
+                  <div className="flex items-center gap-2">
+                    <span>Itinerary & Activities</span>
+                    {planData.paymentDetails?.budgetBreakdown && (
+                      <Badge variant="outline" className="text-xs">
+                        {planData.paymentDetails.budgetBreakdown.itineraryPercentage}%
+                      </Badge>
+                    )}
+                  </div>
                   <span className="font-medium">{formatCurrency(planData.paymentDetails?.itineraryAmount || 29900)}</span>
                 </div>
                 <Separator />
@@ -240,6 +266,14 @@ const FinalPlanPage = ({ isOpen, onClose, planData, onFinishBooking }: FinalPlan
                   <CheckCircle className="w-4 h-4 text-green-500" />
                   <span>Payment Method: {planData.paymentDetails?.paymentMethod || 'Credit Card'}</span>
                 </div>
+                {planData.paymentDetails?.budgetBreakdown && (
+                  <div className="bg-blue-50 rounded-lg p-3 mt-3">
+                    <p className="text-sm text-blue-700 font-medium">💡 Smart Budget Allocation</p>
+                    <p className="text-xs text-blue-600 mt-1">
+                      We've optimized your spending based on your budget range to give you the best value for money.
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

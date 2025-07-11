@@ -68,16 +68,15 @@ const TransportPayment = ({ amount, onPaymentComplete, bookingDetails }: Transpo
 
     setIsProcessing(true);
     
-    // Simulate payment processing
+    // Simulate payment processing - always successful
     setTimeout(() => {
-      const success = Math.random() > 0.1; // 90% success rate
       const transactionId = `TXN-${Date.now()}`;
       
       const paymentResult = {
         transactionId,
         amount,
         paymentMethod: selectedMethod,
-        status: success ? "success" : "failed",
+        status: "success", // Always successful
         bookingDetails,
         paymentDetails: {
           method: selectedMethod,
@@ -87,7 +86,7 @@ const TransportPayment = ({ amount, onPaymentComplete, bookingDetails }: Transpo
 
       setIsProcessing(false);
       onPaymentComplete(paymentResult);
-    }, 3000);
+    }, 2000); // Reduced processing time
   };
 
   const isFormValid = () => {
