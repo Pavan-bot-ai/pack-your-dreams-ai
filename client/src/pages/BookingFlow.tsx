@@ -137,45 +137,8 @@ const BookingFlow = () => {
         );
 
       case 2:
-        if (!selectedTransport) {
-          return (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Plane className="h-5 w-5" />
-                  Transport Booking
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <TransportSelection
-                  onModeSelect={setTransportMode}
-                  selectedMode={transportMode}
-                  onOptionSelect={setSelectedTransport}
-                  selectedOption={selectedTransport}
-                  onNext={() => setCurrentStep(2.5)} // Move to payment
-                />
-              </CardContent>
-            </Card>
-          );
-        } else if (currentStep === 2.5 && !paymentResult) {
-          return (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Transport Payment
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <TransportPayment
-                  amount={selectedTransport.price}
-                  onPaymentComplete={handleTransportPaymentComplete}
-                  bookingDetails={selectedTransport}
-                />
-              </CardContent>
-            </Card>
-          );
-        } else if (paymentResult) {
+        // Show payment result if available
+        if (paymentResult) {
           return (
             <Card>
               <CardHeader>
@@ -193,7 +156,52 @@ const BookingFlow = () => {
             </Card>
           );
         }
-        break;
+        
+        // Show payment form if transport is selected
+        if (selectedTransport) {
+          return (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <CreditCard className="h-5 w-5" />
+                  Transport Payment
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TransportPayment
+                  amount={selectedTransport.price}
+                  onPaymentComplete={handleTransportPaymentComplete}
+                  bookingDetails={selectedTransport}
+                />
+              </CardContent>
+            </Card>
+          );
+        }
+        
+        // Show transport selection by default
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plane className="h-5 w-5" />
+                Transport Booking
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <TransportSelection
+                onModeSelect={setTransportMode}
+                selectedMode={transportMode}
+                onOptionSelect={setSelectedTransport}
+                selectedOption={selectedTransport}
+                onNext={() => {
+                  // This callback is triggered when "Proceed to Payment" is clicked
+                  // selectedTransport is already set, so the component will re-render
+                  // and show the payment form
+                }}
+              />
+            </CardContent>
+          </Card>
+        );
 
       case 3:
         return (
@@ -367,7 +375,7 @@ const BookingFlow = () => {
             Previous
           </Button>
 
-          {currentStep !== 2 && currentStep !== 2.5 && (
+          {currentStep !== 2 && (
             <Button
               onClick={currentStep === 5 ? handleComplete : handleNextStep}
               disabled={currentStep === 5}
