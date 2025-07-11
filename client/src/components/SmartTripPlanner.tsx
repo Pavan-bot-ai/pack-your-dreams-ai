@@ -47,17 +47,29 @@ const SmartTripPlanner = ({ isOpen, onClose, defaultDestination, defaultPlan }: 
   const handleGenerateAIPlan = () => {
     if (!isFormComplete) return;
     
-    // Generate AI plan logic here
-    console.log('Generating AI plan with:', {
+    const tripDetails = {
       destination,
-      startDate,
-      endDate,
-      travelers,
+      startDate: startDate?.toISOString(),
+      endDate: endDate?.toISOString(),
+      travelers: parseInt(travelers),
       budget,
-      selectedInterest
-    });
+      interest: selectedInterest,
+      duration: startDate && endDate ? 
+        `${Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))} days` : ''
+    };
     
-    alert('AI Plan Generated! (This would show the generated plan)');
+    console.log('Generating plan with details:', tripDetails);
+    
+    // Store trip details and navigate to plan generation
+    localStorage.setItem('currentTripDetails', JSON.stringify(tripDetails));
+    
+    // Close modal and navigate
+    onClose();
+    
+    // Navigate to plan generation page
+    setTimeout(() => {
+      window.location.href = '/plan-generation';
+    }, 100);
   };
 
   const resetForm = () => {

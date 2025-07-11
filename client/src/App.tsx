@@ -12,6 +12,9 @@ import SavedPlaces from "./pages/SavedPlaces";
 import TripHistory from "./pages/TripHistory";
 import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
+import PlanGeneration from "./pages/PlanGeneration";
+import BookingFlow from "./pages/BookingFlow";
+import BookingSuccess from "./pages/BookingSuccess";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +33,9 @@ const App = () => (
           <Route path="/trip-history" component={TripHistory} />
           <Route path="/profile" component={Profile} />
           <Route path="/settings" component={Settings} />
+          <Route path="/plan-generation" component={PlanGeneration} />
+          <Route path="/booking-flow" component={BookingFlow} />
+          <Route path="/booking-success" component={BookingSuccess} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route component={NotFound} />
         </Switch>

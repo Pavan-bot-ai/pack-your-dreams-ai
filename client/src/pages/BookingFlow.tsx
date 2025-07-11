@@ -1,0 +1,342 @@
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { ArrowLeft, ArrowRight, CheckCircle, Plane, Building, CreditCard, FileText, MapPin } from "lucide-react";
+import { useLocation } from "wouter";
+
+interface BookingStep {
+  id: number;
+  title: string;
+  icon: any;
+  completed: boolean;
+}
+
+const BookingFlow = () => {
+  const [, setLocation] = useLocation();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
+
+  const steps: BookingStep[] = [
+    { id: 1, title: "Plan Selection", icon: FileText, completed: currentStep > 1 },
+    { id: 2, title: "Transport Booking", icon: Plane, completed: currentStep > 2 },
+    { id: 3, title: "Hotel Booking", icon: Building, completed: currentStep > 3 },
+    { id: 4, title: "Payment", icon: CreditCard, completed: currentStep > 4 },
+    { id: 5, title: "Final Plan", icon: CheckCircle, completed: currentStep > 5 }
+  ];
+
+  useEffect(() => {
+    // Get selected plan from localStorage
+    const planData = localStorage.getItem('selectedPlan');
+    if (planData) {
+      setSelectedPlan(JSON.parse(planData));
+    }
+
+    // Get step from URL query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const step = urlParams.get('step');
+    if (step) {
+      setCurrentStep(parseInt(step));
+    }
+  }, []);
+
+  const handleNextStep = () => {
+    if (currentStep < 5) {
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      window.history.replaceState(null, '', `/booking-flow?step=${nextStep}`);
+    }
+  };
+
+  const handlePrevStep = () => {
+    if (currentStep > 1) {
+      const prevStep = currentStep - 1;
+      setCurrentStep(prevStep);
+      window.history.replaceState(null, '', `/booking-flow?step=${prevStep}`);
+    }
+  };
+
+  const handleComplete = () => {
+    // Save booking to localStorage or send to backend
+    const bookingData = {
+      ...selectedPlan,
+      bookingId: `TRP-${Date.now()}`,
+      status: 'confirmed',
+      bookingDate: new Date().toISOString()
+    };
+    
+    localStorage.setItem('latestBooking', JSON.stringify(bookingData));
+    setLocation('/booking-success');
+  };
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Confirm Your Selected Plan</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {selectedPlan && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-semibold">{selectedPlan.selectedPlan.title}</h3>
+                      <p className="text-gray-600 flex items-center gap-1">
+                        <MapPin className="h-4 w-4" />
+                        {selectedPlan.tripDetails.destination}
+                      </p>
+                    </div>
+                    <Badge className="bg-green-100 text-green-700 border-0">
+                      {selectedPlan.selectedPlan.feasibilityScore}% Feasible
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-500">Duration:</span>
+                      <span className="ml-2">{selectedPlan.selectedPlan.duration}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Travelers:</span>
+                      <span className="ml-2">{selectedPlan.tripDetails.travelers} people</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Budget:</span>
+                      <span className="ml-2">${selectedPlan.tripDetails.budget}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Estimated Cost:</span>
+                      <span className="ml-2">{selectedPlan.selectedPlan.estimatedCost}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        );
+
+      case 2:
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plane className="h-5 w-5" />
+                Transport Booking
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid gap-4">
+                  <div className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h4 className="font-medium">Economy Flight</h4>
+                        <p className="text-sm text-gray-600">Direct flight, 8 hours</p>
+                      </div>
+                      <span className="font-semibold">$450</span>
+                    </div>
+                  </div>
+                  <div className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer border-blue-200 bg-blue-50">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h4 className="font-medium">Business Class</h4>
+                        <p className="text-sm text-gray-600">Direct flight, premium service</p>
+                      </div>
+                      <span className="font-semibold">$1,200</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 3:
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building className="h-5 w-5" />
+                Hotel Booking
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid gap-4">
+                  <div className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h4 className="font-medium">City Center Hotel</h4>
+                        <p className="text-sm text-gray-600">3-star, free WiFi, breakfast included</p>
+                      </div>
+                      <span className="font-semibold">$80/night</span>
+                    </div>
+                  </div>
+                  <div className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer border-blue-200 bg-blue-50">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h4 className="font-medium">Luxury Resort</h4>
+                        <p className="text-sm text-gray-600">5-star, spa, all amenities</p>
+                      </div>
+                      <span className="font-semibold">$250/night</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 4:
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Payment Details
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2">Booking Summary</h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span>Flight (Business Class)</span>
+                      <span>$1,200</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Hotel (6 nights)</span>
+                      <span>$1,500</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Activities & Tours</span>
+                      <span>$300</span>
+                    </div>
+                    <hr />
+                    <div className="flex justify-between font-semibold">
+                      <span>Total Amount</span>
+                      <span>$3,000</span>
+                    </div>
+                  </div>
+                </div>
+                <Button className="w-full">Proceed to Payment</Button>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      case 5:
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                Final Plan Confirmation
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-center py-8">
+                  <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">Booking Confirmed!</h3>
+                  <p className="text-gray-600">Your trip has been successfully booked</p>
+                </div>
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h4 className="font-medium mb-2">Booking Reference</h4>
+                  <p className="text-sm text-green-700">TRP-{Date.now()}</p>
+                </div>
+                <Button onClick={handleComplete} className="w-full">
+                  Complete Booking
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const progressPercentage = (currentStep / 5) * 100;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 p-4">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center mb-6">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setLocation("/plan-generation")}
+            className="mr-3"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <h1 className="text-2xl font-bold text-gray-900">Booking Process</h1>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="mb-8">
+          <div className="flex justify-between mb-2">
+            <span className="text-sm font-medium">Step {currentStep} of 5</span>
+            <span className="text-sm text-gray-600">{Math.round(progressPercentage)}% Complete</span>
+          </div>
+          <Progress value={progressPercentage} className="mb-4" />
+          
+          {/* Step Indicators */}
+          <div className="flex justify-between">
+            {steps.map((step) => {
+              const IconComponent = step.icon;
+              return (
+                <div key={step.id} className="flex flex-col items-center">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    step.id === currentStep 
+                      ? 'bg-blue-500 text-white' 
+                      : step.completed 
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-gray-200 text-gray-600'
+                  }`}>
+                    <IconComponent className="h-5 w-5" />
+                  </div>
+                  <span className="text-xs mt-1 text-center">{step.title}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Step Content */}
+        <div className="mb-8">
+          {renderStepContent()}
+        </div>
+
+        {/* Navigation */}
+        <div className="flex justify-between">
+          <Button
+            variant="outline"
+            onClick={handlePrevStep}
+            disabled={currentStep === 1}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Previous
+          </Button>
+
+          <Button
+            onClick={currentStep === 5 ? handleComplete : handleNextStep}
+            disabled={currentStep === 5}
+            className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+          >
+            {currentStep === 5 ? "Complete" : "Next"}
+            {currentStep !== 5 && <ArrowRight className="h-4 w-4 ml-2" />}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default BookingFlow;
