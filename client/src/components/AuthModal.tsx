@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail, Lock, User, Plane } from "lucide-react";
+import { User, Lock, Plane } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -16,27 +17,57 @@ interface AuthModalProps {
 
 const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [loginData, setLoginData] = useState({ username: '', password: '' });
+  const [registerData, setRegisterData] = useState({ username: '', password: '' });
+  const { login } = useAuth();
+  const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      onLogin({ name: "Travel Enthusiast", email: "user@example.com" });
+    try {
+      const success = await login(loginData.username, loginData.password);
+      if (success) {
+        onLogin({});
+        toast({
+          title: "Login successful",
+          description: "Welcome back!",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Login failed",
+        description: "Please check your credentials and try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      onLogin({ name: "New Traveler", email: "newuser@example.com" });
+    try {
+      const success = await login(registerData.username, registerData.password, true);
+      if (success) {
+        onLogin({});
+        toast({
+          title: "Registration successful",
+          description: "Welcome to Pack Your Bags!",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Registration failed",
+        description: "Please try again with a different username.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -68,13 +99,14 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
               <CardContent>
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="username">Username</Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                       <Input
-                        id="email"
-                        type="email"
-                        placeholder="Enter your email"
+                        id="username"
+                        value={loginData.username}
+                        onChange={(e) => setLoginData(prev => ({ ...prev, username: e.target.value }))}
+                        placeholder="Enter your username"
                         className="pl-10"
                         required
                       />
@@ -87,6 +119,8 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
                       <Input
                         id="password"
                         type="password"
+                        value={loginData.password}
+                        onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
                         placeholder="Enter your password"
                         className="pl-10"
                         required
@@ -109,31 +143,19 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
             <Card>
               <CardHeader className="text-center">
                 <CardTitle>Create Account</CardTitle>
-                <CardDescription>Start your travel journey today</CardDescription>
+                <CardDescription>Join the travel community</CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSignup} className="space-y-4">
+                <form onSubmit={handleRegister} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="signup-username">Username</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                       <Input
-                        id="name"
-                        type="text"
-                        placeholder="Enter your full name"
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <div className="relative">
-                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="signup-email"
-                        type="email"
-                        placeholder="Enter your email"
+                        id="signup-username"
+                        value={registerData.username}
+                        onChange={(e) => setRegisterData(prev => ({ ...prev, username: e.target.value }))}
+                        placeholder="Choose a username"
                         className="pl-10"
                         required
                       />
@@ -146,6 +168,8 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
                       <Input
                         id="signup-password"
                         type="password"
+                        value={registerData.password}
+                        onChange={(e) => setRegisterData(prev => ({ ...prev, password: e.target.value }))}
                         placeholder="Create a password"
                         className="pl-10"
                         required

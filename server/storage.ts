@@ -8,7 +8,12 @@ import { eq, and } from "drizzle-orm";
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserBySessionToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUserSession(id: number, sessionToken: string, expiryDate: Date): Promise<User | undefined>;
+  updateUserLanguage(id: number, language: string): Promise<User | undefined>;
+  updateUserActivity(id: number): Promise<void>;
+  clearUserSession(id: number): Promise<void>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   getTransactionsByUser(userId: number): Promise<Transaction[]>;
   getTransactionById(id: number): Promise<Transaction | undefined>;
@@ -39,6 +44,55 @@ export class DatabaseStorage implements IStorage {
       .values(insertUser)
       .returning();
     return user;
+  }
+
+  async getUserBySessionToken(token: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.sessionToken, token));
+    if (user && user.sessionExpiry && new Date() > user.sessionExpiry) {
+      // Session expired, clear it
+      await this.clearUserSession(user.id);
+      return undefined;
+    }
+    return user || undefined;
+  }
+
+  async updateUserSession(id: number, sessionToken: string, expiryDate: Date): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ 
+        sessionToken, 
+        sessionExpiry: expiryDate,
+        lastActiveAt: new Date()
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  async updateUserLanguage(id: number, language: string): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ language })
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  async updateUserActivity(id: number): Promise<void> {
+    await db
+      .update(users)
+      .set({ lastActiveAt: new Date() })
+      .where(eq(users.id, id));
+  }
+
+  async clearUserSession(id: number): Promise<void> {
+    await db
+      .update(users)
+      .set({ 
+        sessionToken: null, 
+        sessionExpiry: null 
+      })
+      .where(eq(users.id, id));
   }
 
   async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {
@@ -119,17 +173,21 @@ export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private transactions: Map<number, Transaction>;
   private savedPlaces: Map<number, SavedPlace>;
+  private hotelBookings: Map<number, HotelBooking>;
   currentId: number;
   currentTransactionId: number;
   currentSavedPlaceId: number;
+  currentHotelBookingId: number;
 
   constructor() {
     this.users = new Map();
     this.transactions = new Map();
     this.savedPlaces = new Map();
+    this.hotelBookings = new Map();
     this.currentId = 1;
     this.currentTransactionId = 1;
     this.currentSavedPlaceId = 1;
+    this.currentHotelBookingId = 1;
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -144,9 +202,76 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentId++;
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id,
+      sessionToken: null,
+      sessionExpiry: null,
+      language: "en",
+      lastActiveAt: new Date()
+    };
     this.users.set(id, user);
     return user;
+  }
+
+  async getUserBySessionToken(token: string): Promise<User | undefined> {
+    const userEntries = Array.from(this.users.values());
+    for (const user of userEntries) {
+      if (user.sessionToken === token) {
+        if (user.sessionExpiry && new Date() > user.sessionExpiry) {
+          // Session expired, clear it
+          await this.clearUserSession(user.id);
+          return undefined;
+        }
+        return user;
+      }
+    }
+    return undefined;
+  }
+
+  async updateUserSession(id: number, sessionToken: string, expiryDate: Date): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (user) {
+      const updatedUser = { 
+        ...user, 
+        sessionToken, 
+        sessionExpiry: expiryDate,
+        lastActiveAt: new Date()
+      };
+      this.users.set(id, updatedUser);
+      return updatedUser;
+    }
+    return undefined;
+  }
+
+  async updateUserLanguage(id: number, language: string): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (user) {
+      const updatedUser = { ...user, language };
+      this.users.set(id, updatedUser);
+      return updatedUser;
+    }
+    return undefined;
+  }
+
+  async updateUserActivity(id: number): Promise<void> {
+    const user = this.users.get(id);
+    if (user) {
+      const updatedUser = { ...user, lastActiveAt: new Date() };
+      this.users.set(id, updatedUser);
+    }
+  }
+
+  async clearUserSession(id: number): Promise<void> {
+    const user = this.users.get(id);
+    if (user) {
+      const updatedUser = { 
+        ...user, 
+        sessionToken: null, 
+        sessionExpiry: null 
+      };
+      this.users.set(id, updatedUser);
+    }
   }
 
   async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {

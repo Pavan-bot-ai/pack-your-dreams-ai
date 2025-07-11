@@ -1,21 +1,21 @@
 
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const useAppState = () => {
+  const { isAuthenticated, logout } = useAuth();
   const [showAuth, setShowAuth] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [showLocalGuide, setShowLocalGuide] = useState(false);
   const [showTripPlanner, setShowTripPlanner] = useState(false);
   const [showTranslator, setShowTranslator] = useState(false);
   const [showBookings, setShowBookings] = useState(false);
-  const [user, setUser] = useState(null);
   const [selectedDestination, setSelectedDestination] = useState<string>('');
   const [showTransactions, setShowTransactions] = useState(false);
   const [showPlaceDetails, setShowPlaceDetails] = useState(false);
   const [selectedPlaceForDetails, setSelectedPlaceForDetails] = useState<string>('');
 
   const handleFeatureClick = (feature: string) => {
-    if (!isLoggedIn) {
+    if (!isAuthenticated) {
       setShowAuth(true);
       return;
     }
@@ -39,7 +39,7 @@ export const useAppState = () => {
   };
 
   const handleTrendingPlaceClick = (destination: string) => {
-    if (!isLoggedIn) {
+    if (!isAuthenticated) {
       setShowAuth(true);
       return;
     }
@@ -49,7 +49,7 @@ export const useAppState = () => {
   };
 
   const handleMenuItemClick = (item: string) => {
-    if (!isLoggedIn && item !== 'login' && item !== 'settings') {
+    if (!isAuthenticated && item !== 'login' && item !== 'settings') {
       setShowAuth(true);
       return;
     }
@@ -82,18 +82,15 @@ export const useAppState = () => {
   };
 
   const handleLogin = (userData: any) => {
-    setIsLoggedIn(true);
-    setUser(userData);
     setShowAuth(false);
   };
 
   const handleLogout = () => {
-    setIsLoggedIn(false);
-    setUser(null);
+    logout();
   };
 
   const handlePlaceImageClick = (destination: string) => {
-    if (!isLoggedIn) {
+    if (!isAuthenticated) {
       setShowAuth(true);
       return;
     }
@@ -111,12 +108,11 @@ export const useAppState = () => {
   return {
     // State
     showAuth,
-    isLoggedIn,
+    isLoggedIn: isAuthenticated,
     showLocalGuide,
     showTripPlanner,
     showTranslator,
     showBookings,
-    user,
     selectedDestination,
     showTransactions,
     showPlaceDetails,

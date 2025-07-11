@@ -6,6 +6,10 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  sessionToken: text("session_token"),
+  sessionExpiry: timestamp("session_expiry"),
+  language: text("language").default("en"),
+  lastActiveAt: timestamp("last_active_at").defaultNow(),
 });
 
 export const transactions = pgTable("transactions", {

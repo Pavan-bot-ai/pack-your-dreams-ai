@@ -1,7 +1,10 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
+import { AuthProvider } from "./contexts/AuthContext";
+import { LanguageProvider } from "./contexts/LanguageContext";
 import { Router, Route, Switch } from "wouter";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
@@ -24,39 +27,43 @@ import TripPaymentMethods from "./pages/TripPaymentMethods";
 import TripPaymentDetails from "./pages/TripPaymentDetails";
 import TripPaymentStatus from "./pages/TripPaymentStatus";
 
-const queryClient = new QueryClient();
+
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <Router>
-        <Switch>
-          <Route path="/" component={Index} />
-          <Route path="/booked-plans" component={BookedPlans} />
-          <Route path="/transactions" component={Transactions} />
-          <Route path="/transaction-details/:tripId" component={TransactionDetails} />
-          <Route path="/saved-places" component={SavedPlaces} />
-          <Route path="/trip-history" component={TripHistory} />
-          <Route path="/profile" component={Profile} />
-          <Route path="/settings" component={Settings} />
-          <Route path="/plan-generation" component={PlanGeneration} />
-          <Route path="/booking-flow" component={BookingFlow} />
-          <Route path="/booking-success" component={BookingSuccess} />
-          <Route path="/hotel-booking" component={HotelBooking} />
-          <Route path="/hotel-payment" component={HotelPayment} />
-          <Route path="/payment-status" component={PaymentStatus} />
-          <Route path="/hotel-booking-success" component={HotelBookingSuccess} />
-          <Route path="/trip-payment-summary" component={TripPaymentSummary} />
-          <Route path="/trip-payment-methods" component={TripPaymentMethods} />
-          <Route path="/trip-payment-details" component={TripPaymentDetails} />
-          <Route path="/trip-payment-status" component={TripPaymentStatus} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route component={NotFound} />
-        </Switch>
-      </Router>
-    </TooltipProvider>
+    <AuthProvider>
+      <LanguageProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <Router>
+            <Switch>
+              <Route path="/" component={Index} />
+              <Route path="/booked-plans" component={BookedPlans} />
+              <Route path="/transactions" component={Transactions} />
+              <Route path="/transaction-details/:tripId" component={TransactionDetails} />
+              <Route path="/saved-places" component={SavedPlaces} />
+              <Route path="/trip-history" component={TripHistory} />
+              <Route path="/profile" component={Profile} />
+              <Route path="/settings" component={Settings} />
+              <Route path="/plan-generation" component={PlanGeneration} />
+              <Route path="/booking-flow" component={BookingFlow} />
+              <Route path="/booking-success" component={BookingSuccess} />
+              <Route path="/hotel-booking" component={HotelBooking} />
+              <Route path="/hotel-payment" component={HotelPayment} />
+              <Route path="/payment-status" component={PaymentStatus} />
+              <Route path="/hotel-booking-success" component={HotelBookingSuccess} />
+              <Route path="/trip-payment-summary" component={TripPaymentSummary} />
+              <Route path="/trip-payment-methods" component={TripPaymentMethods} />
+              <Route path="/trip-payment-details" component={TripPaymentDetails} />
+              <Route path="/trip-payment-status" component={TripPaymentStatus} />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route component={NotFound} />
+            </Switch>
+          </Router>
+        </TooltipProvider>
+      </LanguageProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 

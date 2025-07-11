@@ -5,11 +5,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Moon, Sun, Globe } from "lucide-react";
 import { useLocation } from "wouter";
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const Settings = () => {
   const [, setLocation] = useLocation();
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const { currentLanguage, setLanguage, availableLanguages, t } = useLanguage();
+  const { isAuthenticated } = useAuth();
+  const { toast } = useToast();
 
   const handleThemeToggle = (checked: boolean) => {
     setIsDarkMode(checked);
@@ -21,24 +26,23 @@ const Settings = () => {
     localStorage.setItem("theme", checked ? "dark" : "light");
   };
 
-  const handleLanguageChange = (language: string) => {
-    setSelectedLanguage(language);
-    localStorage.setItem("language", language);
-    // Here you would implement language switching logic
+  const handleLanguageChange = async (language: string) => {
+    try {
+      await setLanguage(language);
+      toast({
+        title: t('languageUpdated'),
+        description: t('languageUpdateSuccess'),
+      });
+    } catch (error) {
+      toast({
+        title: t('error'),
+        description: t('languageUpdateError'),
+        variant: "destructive",
+      });
+    }
   };
 
-  const languages = [
-    { code: "en", name: "English" },
-    { code: "es", name: "Español" },
-    { code: "fr", name: "Français" },
-    { code: "de", name: "Deutsch" },
-    { code: "it", name: "Italiano" },
-    { code: "pt", name: "Português" },
-    { code: "ja", name: "日本語" },
-    { code: "ko", name: "한국어" },
-    { code: "zh", name: "中文" },
-    { code: "ar", name: "العربية" }
-  ];
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4">
