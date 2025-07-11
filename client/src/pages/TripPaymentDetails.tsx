@@ -181,9 +181,8 @@ const TripPaymentDetails = () => {
     setIsProcessing(true);
     
     try {
-      // Generate random transaction outcome
-      const outcomes = ['successful', 'pending', 'unsuccessful'];
-      const randomOutcome = outcomes[Math.floor(Math.random() * outcomes.length)];
+      // Always successful payment outcome
+      const randomOutcome = 'successful';
       
       // Create transaction record
       const transactionData = {

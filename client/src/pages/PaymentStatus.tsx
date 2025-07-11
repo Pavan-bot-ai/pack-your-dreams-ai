@@ -138,15 +138,6 @@ const PaymentStatus = () => {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-3">
-              {paymentResult.status === 'successful' && paymentResult.bookingType === 'hotel' && (
-                <Button
-                  onClick={handleContinueToBookingFlow}
-                  className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
-                >
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Continue to Final Plan
-                </Button>
-              )}
               <Button
                 onClick={handleReturnHome}
                 className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"

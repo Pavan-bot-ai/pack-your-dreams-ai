@@ -405,12 +405,12 @@ const BookingFlow = () => {
                   </div>
                   <div className="text-center">
                     <Button 
-                      onClick={handleHotelBookingComplete}
+                      onClick={() => setLocation('/trip-payment-summary')}
                       className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-3 text-lg font-semibold rounded-xl shadow-lg"
                     >
                       <div className="flex items-center gap-2">
                         <CheckCircle className="w-5 h-5" />
-                        View Final Plan
+                        Continue to Payment
                       </div>
                     </Button>
                   </div>

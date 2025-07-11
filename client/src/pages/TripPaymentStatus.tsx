@@ -11,7 +11,10 @@ const TripPaymentStatus = () => {
   useEffect(() => {
     const stored = localStorage.getItem('tripPaymentResult');
     if (stored) {
-      setPaymentResult(JSON.parse(stored));
+      const result = JSON.parse(stored);
+      // Ensure all payments are successful
+      result.status = 'successful';
+      setPaymentResult(result);
     }
   }, []);
 
@@ -73,6 +76,16 @@ const TripPaymentStatus = () => {
         (hamburgerButton as HTMLElement).click();
       }
     }, 500);
+  };
+
+  const handleViewFinalPlan = () => {
+    // Clear temporary payment data
+    localStorage.removeItem('tripPaymentResult');
+    localStorage.removeItem('tripPaymentData');
+    localStorage.removeItem('selectedTripPaymentMethod');
+    
+    // Redirect to final plan page
+    setLocation('/booking-flow?step=5');
   };
 
   if (!paymentResult) {
@@ -152,6 +165,17 @@ const TripPaymentStatus = () => {
 
         {/* Action Buttons */}
         <div className="space-y-4">
+          {paymentResult?.status === 'successful' && (
+            <Button 
+              onClick={handleViewFinalPlan}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+              size="lg"
+            >
+              <CheckCircle className="h-5 w-5 mr-2" />
+              View Final Plan
+            </Button>
+          )}
+          
           <Button 
             onClick={handleGoHome}
             className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
