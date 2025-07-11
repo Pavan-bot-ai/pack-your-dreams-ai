@@ -5,7 +5,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (username: string, password: string, isRegister?: boolean) => Promise<boolean>;
   logout: () => void;
   updateUserLanguage: (language: string) => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -69,10 +69,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Login function
-  const login = async (username: string, password: string): Promise<boolean> => {
+  // Login/Register function
+  const login = async (username: string, password: string, isRegister = false): Promise<boolean> => {
     try {
-      const response = await fetch('/api/auth/login', {
+      const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -88,7 +89,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       return false;
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Authentication error:', error);
       return false;
     }
   };

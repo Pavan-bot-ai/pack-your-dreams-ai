@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,10 +29,18 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
     try {
       const success = await login(loginData.username, loginData.password);
       if (success) {
+        setLoginData({ username: '', password: '' });
+        onClose();
         onLogin({});
         toast({
           title: "Login successful",
           description: "Welcome back!",
+        });
+      } else {
+        toast({
+          title: "Login failed",
+          description: "Please check your credentials and try again.",
+          variant: "destructive",
         });
       }
     } catch (error) {
@@ -53,10 +61,18 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
     try {
       const success = await login(registerData.username, registerData.password, true);
       if (success) {
+        setRegisterData({ username: '', password: '' });
+        onClose();
         onLogin({});
         toast({
           title: "Registration successful",
           description: "Welcome to Pack Your Bags!",
+        });
+      } else {
+        toast({
+          title: "Registration failed",
+          description: "Please try again with a different username.",
+          variant: "destructive",
         });
       }
     } catch (error) {
@@ -82,6 +98,9 @@ const AuthModal = ({ isOpen, onClose, onLogin }: AuthModalProps) => {
           <DialogTitle className="text-center text-2xl bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
             Welcome to Pack Your Bags
           </DialogTitle>
+          <DialogDescription className="text-center text-gray-600">
+            Sign in to access all travel features and save your preferences
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="login" className="w-full">
