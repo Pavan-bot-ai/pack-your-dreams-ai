@@ -15,6 +15,9 @@ import Settings from "./pages/Settings";
 import PlanGeneration from "./pages/PlanGeneration";
 import BookingFlow from "./pages/BookingFlow";
 import BookingSuccess from "./pages/BookingSuccess";
+import HotelBooking from "./pages/HotelBooking";
+import HotelPayment from "./pages/HotelPayment";
+import PaymentStatus from "./pages/PaymentStatus";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +39,9 @@ const App = () => (
           <Route path="/plan-generation" component={PlanGeneration} />
           <Route path="/booking-flow" component={BookingFlow} />
           <Route path="/booking-success" component={BookingSuccess} />
+          <Route path="/hotel-booking" component={HotelBooking} />
+          <Route path="/hotel-payment" component={HotelPayment} />
+          <Route path="/payment-status" component={PaymentStatus} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route component={NotFound} />
         </Switch>

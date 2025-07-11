@@ -105,6 +105,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Hotel booking routes
+  app.post("/api/hotel-bookings", async (req, res) => {
+    try {
+      const bookingData = {
+        ...req.body,
+        userId: req.body.userId || 1 // Mock user ID for now
+      };
+      
+      const booking = await storage.createHotelBooking(bookingData);
+      res.json(booking);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/hotel-bookings", async (req, res) => {
+    try {
+      const userId = req.query.userId || 1; // Mock user ID for now
+      const bookings = await storage.getHotelBookingsByUser(parseInt(userId as string));
+      res.json(bookings);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/hotel-bookings/:id/status", async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    try {
+      const booking = await storage.updateHotelBookingStatus(parseInt(id), status);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      res.json(booking);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

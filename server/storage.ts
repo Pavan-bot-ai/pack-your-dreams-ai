@@ -1,4 +1,4 @@
-import { users, transactions, savedPlaces, type User, type InsertUser, type Transaction, type InsertTransaction, type SavedPlace, type InsertSavedPlace } from "@shared/schema";
+import { users, transactions, savedPlaces, hotelBookings, type User, type InsertUser, type Transaction, type InsertTransaction, type SavedPlace, type InsertSavedPlace, type HotelBooking, type InsertHotelBooking } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 
@@ -17,6 +17,9 @@ export interface IStorage {
   createSavedPlace(savedPlace: InsertSavedPlace): Promise<SavedPlace>;
   removeSavedPlace(userId: number, placeId: string): Promise<void>;
   isPlaceSaved(userId: number, placeId: string): Promise<boolean>;
+  createHotelBooking(booking: InsertHotelBooking): Promise<HotelBooking>;
+  getHotelBookingsByUser(userId: number): Promise<HotelBooking[]>;
+  updateHotelBookingStatus(id: number, status: string): Promise<HotelBooking | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -88,6 +91,27 @@ export class DatabaseStorage implements IStorage {
       .from(savedPlaces)
       .where(and(eq(savedPlaces.userId, userId), eq(savedPlaces.placeId, placeId)));
     return !!place;
+  }
+
+  async createHotelBooking(insertBooking: InsertHotelBooking): Promise<HotelBooking> {
+    const [booking] = await db
+      .insert(hotelBookings)
+      .values(insertBooking)
+      .returning();
+    return booking;
+  }
+
+  async getHotelBookingsByUser(userId: number): Promise<HotelBooking[]> {
+    return await db.select().from(hotelBookings).where(eq(hotelBookings.userId, userId));
+  }
+
+  async updateHotelBookingStatus(id: number, status: string): Promise<HotelBooking | undefined> {
+    const [booking] = await db
+      .update(hotelBookings)
+      .set({ bookingStatus: status })
+      .where(eq(hotelBookings.id, id))
+      .returning();
+    return booking || undefined;
   }
 }
 
@@ -190,6 +214,28 @@ export class MemStorage implements IStorage {
     return Array.from(this.savedPlaces.values()).some(
       (place) => place.userId === userId && place.placeId === placeId,
     );
+  }
+
+  async createHotelBooking(insertBooking: InsertHotelBooking): Promise<HotelBooking> {
+    const id = this.currentId++;
+    const booking: HotelBooking = { 
+      ...insertBooking,
+      budgetLimit: insertBooking.budgetLimit || null,
+      id,
+      bookingStatus: "pending",
+      paymentStatus: "pending",
+      transactionId: null,
+      createdAt: new Date()
+    };
+    return booking;
+  }
+
+  async getHotelBookingsByUser(userId: number): Promise<HotelBooking[]> {
+    return [];
+  }
+
+  async updateHotelBookingStatus(id: number, status: string): Promise<HotelBooking | undefined> {
+    return undefined;
   }
 }
 

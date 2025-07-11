@@ -10,6 +10,8 @@ Pack Your Bags is a full-stack web application designed as an AI-powered travel 
 
 **Video Hover Functionality & Saved Places**: Added interactive video playback on hover for travel destination videos with Pexels video integration (January 11, 2025). Implemented saved places feature with heart button functionality, allowing users to save favorite destinations to their profile with full database persistence.
 
+**Hotel Booking System**: Implemented comprehensive hotel booking flow integrated with transportation booking (January 11, 2025), including hotel selection with room types, budget validation warnings, check-in/out date selection, payment processing with multiple payment methods, and transaction status tracking. Added hotelBookings table to PostgreSQL schema with complete CRUD operations.
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -55,6 +57,8 @@ The application follows a monorepo structure with a React frontend and Express.j
 The application uses PostgreSQL with the following tables:
 - Users table with username and password fields for authentication
 - Transactions table for storing booking payments and transaction history
+- SavedPlaces table for user's favorite destinations with heart functionality
+- HotelBookings table for hotel reservations with budget limits and payment tracking
 - Extensible schema structure for future travel-related entities
 
 ### Storage Layer
@@ -78,7 +82,15 @@ The application uses PostgreSQL with the following tables:
    - Multi-payment method processing (Credit/Debit Card, Digital Wallet, Bank Transfer, UPI)
    - Real-time payment status tracking with database integration
    - Transaction history with filtering and search capabilities
-5. **User Account System**: Complete navigation system with dedicated pages for:
+5. **Complete Hotel Booking System**: Integrated hotel booking following transportation:
+   - Hotel selection with multiple properties and room types
+   - Budget validation with real-time warnings when limits exceeded
+   - Room type selection with pricing and amenities
+   - Check-in/check-out date selection with validation
+   - Multi-step payment flow with payment method selection
+   - Payment status tracking (successful/pending/unsuccessful)
+   - Database integration with hotelBookings table for booking persistence
+6. **User Account System**: Complete navigation system with dedicated pages for:
    - Booked Plans (trip management and cancellation)
    - Transactions (payment history and details with database integration)
    - Saved Places (favorite destinations)

@@ -30,6 +30,25 @@ export const savedPlaces = pgTable("saved_places", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const hotelBookings = pgTable("hotel_bookings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  hotelId: text("hotel_id").notNull(),
+  hotelName: text("hotel_name").notNull(),
+  destination: text("destination").notNull(),
+  groupMembers: integer("group_members").notNull(),
+  numberOfRooms: integer("number_of_rooms").notNull(),
+  roomType: text("room_type").notNull(),
+  checkInDate: timestamp("check_in_date").notNull(),
+  checkOutDate: timestamp("check_out_date").notNull(),
+  totalAmount: integer("total_amount").notNull(), // in cents
+  budgetLimit: integer("budget_limit"), // in cents
+  bookingStatus: text("booking_status").notNull().default("pending"), // pending, confirmed, cancelled
+  paymentStatus: text("payment_status").notNull().default("pending"), // pending, completed, failed
+  transactionId: text("transaction_id"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -53,9 +72,26 @@ export const insertSavedPlaceSchema = createInsertSchema(savedPlaces).pick({
   thumbnail: true,
 });
 
+export const insertHotelBookingSchema = createInsertSchema(hotelBookings).pick({
+  userId: true,
+  hotelId: true,
+  hotelName: true,
+  destination: true,
+  groupMembers: true,
+  numberOfRooms: true,
+  roomType: true,
+  checkInDate: true,
+  checkOutDate: true,
+  totalAmount: true,
+  budgetLimit: true,
+  transactionId: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 export type InsertSavedPlace = z.infer<typeof insertSavedPlaceSchema>;
 export type SavedPlace = typeof savedPlaces.$inferSelect;
+export type InsertHotelBooking = z.infer<typeof insertHotelBookingSchema>;
+export type HotelBooking = typeof hotelBookings.$inferSelect;

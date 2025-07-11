@@ -86,7 +86,7 @@ const BookingFlow = () => {
     };
     
     localStorage.setItem('latestBooking', JSON.stringify(bookingData));
-    setLocation('/booking-success');
+    setLocation('/hotel-booking');
   };
 
   const renderStepContent = () => {
@@ -208,32 +208,20 @@ const BookingFlow = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Building className="h-5 w-5" />
-                Hotel Booking
+                <CheckCircle className="h-5 w-5 text-green-600" />
+                Transportation Completed
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid gap-4">
-                  <div className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="font-medium">City Center Hotel</h4>
-                        <p className="text-sm text-gray-600">3-star, free WiFi, breakfast included</p>
-                      </div>
-                      <span className="font-semibold">$80/night</span>
-                    </div>
-                  </div>
-                  <div className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer border-blue-200 bg-blue-50">
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="font-medium">Luxury Resort</h4>
-                        <p className="text-sm text-gray-600">5-star, spa, all amenities</p>
-                      </div>
-                      <span className="font-semibold">$250/night</span>
-                    </div>
-                  </div>
+                <div className="text-center py-8">
+                  <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
+                  <h3 className="text-xl font-semibold mb-2">Transportation Booked!</h3>
+                  <p className="text-gray-600">Your transport has been successfully booked. Now let's book your hotel.</p>
                 </div>
+                <Button onClick={() => setLocation('/hotel-booking')} className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
+                  Continue to Hotel Booking
+                </Button>
               </div>
             </CardContent>
           </Card>
