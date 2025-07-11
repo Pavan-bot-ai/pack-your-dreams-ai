@@ -74,6 +74,73 @@ const BookingFlow = () => {
       localStorage.removeItem('returnToBookingFlow'); // Clean up
       window.history.replaceState(null, '', `/booking-flow?step=4`);
     }
+    
+    // Check if we should show final plan from payment completion
+    const showFinalPlanFlag = localStorage.getItem('showFinalPlanFromPayment');
+    if (showFinalPlanFlag === 'true') {
+      localStorage.removeItem('showFinalPlanFromPayment');
+      
+      // Set up the final plan data and show it
+      const transportData = JSON.parse(localStorage.getItem('selectedTransport') || '{}');
+      const hotelData = JSON.parse(localStorage.getItem('selectedHotel') || '{}');
+      const storedPlan = JSON.parse(localStorage.getItem('selectedPlan') || '{}');
+      
+      // Calculate budget allocation
+      const userBudget = storedPlan?.tripDetails?.budget || storedPlan?.budget || 5000;
+      const budgetInCents = parseInt(userBudget) * 100;
+      
+      let hotelPercentage = 0.45;
+      let transportPercentage = 0.35;
+      let itineraryPercentage = 0.20;
+      
+      if (budgetInCents >= 1000000) {
+        hotelPercentage = 0.55;
+        transportPercentage = 0.30;
+        itineraryPercentage = 0.15;
+      } else if (budgetInCents >= 500000) {
+        hotelPercentage = 0.50;
+        transportPercentage = 0.32;
+        itineraryPercentage = 0.18;
+      } else if (budgetInCents >= 200000) {
+        hotelPercentage = 0.45;
+        transportPercentage = 0.35;
+        itineraryPercentage = 0.20;
+      } else {
+        hotelPercentage = 0.40;
+        transportPercentage = 0.40;
+        itineraryPercentage = 0.20;
+      }
+      
+      const calculatedHotelAmount = Math.round(budgetInCents * hotelPercentage);
+      const calculatedTransportAmount = transportData?.price * 100 || Math.round(budgetInCents * transportPercentage);
+      const calculatedItineraryAmount = Math.round(budgetInCents * itineraryPercentage);
+      
+      const finalPlanData = {
+        planDetails: storedPlan?.tripDetails || {},
+        transportDetails: transportData || {},
+        hotelDetails: hotelData,
+        itineraryDetails: storedPlan?.selectedPlan || {},
+        paymentDetails: {
+          transportAmount: calculatedTransportAmount,
+          hotelAmount: calculatedHotelAmount,
+          itineraryAmount: calculatedItineraryAmount,
+          totalAmount: calculatedTransportAmount + calculatedHotelAmount + calculatedItineraryAmount,
+          paymentMethod: 'Credit Card',
+          budgetBreakdown: {
+            totalBudget: budgetInCents,
+            hotelPercentage: Math.round(hotelPercentage * 100),
+            transportPercentage: Math.round(transportPercentage * 100),
+            itineraryPercentage: Math.round(itineraryPercentage * 100)
+          }
+        }
+      };
+      
+      setPlanData(finalPlanData);
+      setCurrentStep(5);
+      setIsTransportCompleted(true);
+      setHotelBookingComplete(true);
+      setShowFinalPlan(true);
+    }
   }, []);
 
   const handleNextStep = () => {

@@ -79,13 +79,11 @@ const TripPaymentStatus = () => {
   };
 
   const handleViewFinalPlan = () => {
-    // Clear temporary payment data
-    localStorage.removeItem('tripPaymentResult');
-    localStorage.removeItem('tripPaymentData');
-    localStorage.removeItem('selectedTripPaymentMethod');
+    // Store flag to trigger final plan view
+    localStorage.setItem('showFinalPlanFromPayment', 'true');
     
-    // Redirect to final plan page
-    setLocation('/booking-flow?step=5');
+    // Redirect to booking flow - it will detect the flag and show final plan
+    setLocation('/booking-flow');
   };
 
   if (!paymentResult) {
