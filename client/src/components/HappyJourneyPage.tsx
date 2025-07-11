@@ -61,7 +61,7 @@ const HappyJourneyPage = ({ isOpen, onClose, planData }: HappyJourneyPageProps) 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 z-50 flex items-center justify-center p-4 overflow-hidden">
+    <div className="fixed inset-0 bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 z-50 flex items-center justify-center p-4 overflow-y-auto">
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-10 left-10 w-20 h-20 bg-yellow-300 rounded-full opacity-20 animate-bounce"></div>
@@ -76,7 +76,7 @@ const HappyJourneyPage = ({ isOpen, onClose, planData }: HappyJourneyPageProps) 
         <div className="absolute bottom-1/4 right-1/6 text-4xl animate-pulse" style={{ animationDelay: '1s' }}>🎊</div>
       </div>
 
-      <div className={`bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-8 text-center relative transform transition-all duration-1000 ${
+      <div className={`bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-8 text-center relative transform transition-all duration-1000 my-8 ${
         showAnimation ? 'scale-100 opacity-100' : 'scale-50 opacity-0'
       }`}>
         
