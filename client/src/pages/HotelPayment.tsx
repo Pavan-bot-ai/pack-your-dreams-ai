@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { CreditCard, Smartphone, Building, ArrowLeft, Lock } from "lucide-react";
 import { useLocation } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
 
 interface PaymentMethod {
   id: string;
@@ -206,31 +207,19 @@ const HotelPayment = () => {
         })
       };
 
-      const response = await fetch('/api/transactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(transactionData)
-      });
-
-      if (response.ok) {
-        const transaction = await response.json();
-        
-        // Store payment result for status page
-        localStorage.setItem('paymentResult', JSON.stringify({
-          status: randomOutcome,
-          transactionId: transaction.id,
-          amount: bookingData.totalAmount,
-          paymentMethod: selectedPaymentMethod,
-          bookingType: 'hotel',
-          bookingDetails: bookingData
-        }));
-        
-        setLocation('/payment-status');
-      } else {
-        const errorData = await response.json();
-        console.error('Payment failed:', errorData);
-        alert('Payment processing failed. Please try again.');
-      }
+      const transaction = await apiRequest('POST', '/api/transactions', transactionData);
+      
+      // Store payment result for status page
+      localStorage.setItem('paymentResult', JSON.stringify({
+        status: randomOutcome,
+        transactionId: transaction.id,
+        amount: bookingData.totalAmount,
+        paymentMethod: selectedPaymentMethod,
+        bookingType: 'hotel',
+        bookingDetails: bookingData
+      }));
+      
+      setLocation('/payment-status');
     } catch (error) {
       console.error('Payment processing error:', error);
       alert('Payment processing failed. Please try again.');

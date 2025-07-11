@@ -10,6 +10,7 @@ import TransportPayment from "@/components/TransportPayment";
 import PaymentStatus from "@/components/PaymentStatus";
 import FinalPlanPage from "@/components/FinalPlanPage";
 import HappyJourneyPage from "@/components/HappyJourneyPage";
+import { apiRequest } from "@/lib/queryClient";
 
 interface BookingStep {
   id: number;
@@ -201,28 +202,12 @@ const BookingFlow = () => {
       };
 
       // Save to backend via API
-      const response = await fetch('/api/booked-plans', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-        },
-        body: JSON.stringify(bookedPlanData)
-      });
-
-      if (response.ok) {
-        const savedPlan = await response.json();
-        console.log('Plan saved successfully:', savedPlan);
-        
-        // Hide final plan and show happy journey
-        setShowFinalPlan(false);
-        setShowHappyJourney(true);
-      } else {
-        console.error('Failed to save plan');
-        // Still show happy journey page even if save fails
-        setShowFinalPlan(false);
-        setShowHappyJourney(true);
-      }
+      const savedPlan = await apiRequest('POST', '/api/booked-plans', bookedPlanData);
+      console.log('Plan saved successfully:', savedPlan);
+      
+      // Hide final plan and show happy journey
+      setShowFinalPlan(false);
+      setShowHappyJourney(true);
     } catch (error) {
       console.error('Error saving plan:', error);
       // Still show happy journey page even if there's an error

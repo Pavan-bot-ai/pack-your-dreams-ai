@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Heart, MapPin, Trash2, ArrowLeft } from "lucide-react";
 import { useLocation } from "wouter";
+import { apiRequest } from "@/lib/queryClient";
 
 interface SavedPlace {
   id: number;
@@ -26,11 +27,8 @@ const SavedPlaces = () => {
   const fetchSavedPlaces = async () => {
     try {
       const userId = 1; // Mock user ID - replace with actual auth
-      const response = await fetch(`/api/saved-places?userId=${userId}`);
-      if (response.ok) {
-        const places = await response.json();
-        setSavedPlaces(places);
-      }
+      const places = await apiRequest('GET', `/api/saved-places?userId=${userId}`);
+      setSavedPlaces(places);
     } catch (error) {
       console.error('Error fetching saved places:', error);
     } finally {
@@ -41,15 +39,8 @@ const SavedPlaces = () => {
   const removeSavedPlace = async (placeId: string) => {
     try {
       const userId = 1; // Mock user ID - replace with actual auth
-      const response = await fetch('/api/saved-places', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, placeId })
-      });
-      
-      if (response.ok) {
-        setSavedPlaces(prev => prev.filter(place => place.placeId !== placeId));
-      }
+      await apiRequest('DELETE', '/api/saved-places', { userId, placeId });
+      setSavedPlaces(prev => prev.filter(place => place.placeId !== placeId));
     } catch (error) {
       console.error('Error removing saved place:', error);
     }

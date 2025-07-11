@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Play, Star, MapPin, Heart } from "lucide-react";
 import { useState, useRef } from "react";
 import VideoModal from "./VideoModal";
+import { apiRequest } from "@/lib/queryClient";
 
 const videoReels = [
   {
@@ -87,40 +88,26 @@ const VideoReels = () => {
     if (isCurrentlySaved) {
       // Remove from saved places
       try {
-        const response = await fetch('/api/saved-places', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, placeId: reel.id.toString() })
+        await apiRequest('DELETE', '/api/saved-places', { userId, placeId: reel.id.toString() });
+        setSavedPlaces(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(reel.id);
+          return newSet;
         });
-        
-        if (response.ok) {
-          setSavedPlaces(prev => {
-            const newSet = new Set(prev);
-            newSet.delete(reel.id);
-            return newSet;
-          });
-        }
       } catch (error) {
         console.error('Error removing saved place:', error);
       }
     } else {
       // Add to saved places
       try {
-        const response = await fetch('/api/saved-places', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId,
-            placeId: reel.id.toString(),
-            title: reel.title,
-            location: reel.location,
-            thumbnail: reel.thumbnail
-          })
+        await apiRequest('POST', '/api/saved-places', {
+          userId,
+          placeId: reel.id.toString(),
+          title: reel.title,
+          location: reel.location,
+          thumbnail: reel.thumbnail
         });
-        
-        if (response.ok) {
-          setSavedPlaces(prev => new Set(prev).add(reel.id));
-        }
+        setSavedPlaces(prev => new Set(prev).add(reel.id));
       } catch (error) {
         console.error('Error saving place:', error);
       }

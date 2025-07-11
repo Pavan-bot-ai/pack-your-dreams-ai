@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle, Clock, Receipt, ArrowRight } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface PaymentStatusProps {
   paymentResult: any;
@@ -17,19 +18,7 @@ const PaymentStatus = ({ paymentResult, onContinue }: PaymentStatusProps) => {
 
   const saveTransactionMutation = useMutation({
     mutationFn: async (transactionData: any) => {
-      const response = await fetch("/api/transactions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(transactionData),
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to save transaction");
-      }
-      
-      return response.json();
+      return apiRequest("POST", "/api/transactions", transactionData);
     },
     onSuccess: () => {
       toast({

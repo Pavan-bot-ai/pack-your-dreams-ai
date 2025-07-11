@@ -26,14 +26,7 @@ const Transactions = () => {
 
   // Fetch transactions from API
   const { data: transactions = [], isLoading, error } = useQuery({
-    queryKey: ["/api/transactions"],
-    queryFn: async () => {
-      const response = await fetch("/api/transactions?userId=1"); // Mock user ID
-      if (!response.ok) {
-        throw new Error("Failed to fetch transactions");
-      }
-      return response.json();
-    },
+    queryKey: ["/api/transactions?userId=1"],
   });
 
   const filteredTransactions = transactions.filter((transaction: Transaction) => {

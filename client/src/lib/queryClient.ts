@@ -1,6 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 
-const BASE_URL = import.meta.env.DEV ? 'http://localhost:5000' : '';
+const BASE_URL = import.meta.env.DEV ? '' : '';
 
 // Get auth token from localStorage
 const getAuthToken = () => {
@@ -30,16 +30,24 @@ export const apiRequest = async (
     config.body = JSON.stringify(data);
   }
 
-  const response = await fetch(`${BASE_URL}${url}`, config);
-  
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(`${response.status}: ${errorData.error || response.statusText}`);
-  }
+  try {
+    const response = await fetch(`${BASE_URL}${url}`, config);
+    
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`${response.status}: ${errorData.error || response.statusText}`);
+    }
 
-  // Handle empty responses
-  const text = await response.text();
-  return text ? JSON.parse(text) : {};
+    // Handle empty responses
+    const text = await response.text();
+    return text ? JSON.parse(text) : {};
+  } catch (error) {
+    // Handle network errors
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Network error: Unable to connect to server');
+    }
+    throw error;
+  }
 };
 
 // Default query function for react-query
@@ -56,9 +64,16 @@ export const queryClient = new QueryClient({
       staleTime: 1000 * 60 * 5, // 5 minutes
       gcTime: 1000 * 60 * 10, // 10 minutes (previously cacheTime)
       retry: (failureCount, error: any) => {
-        // Don't retry on 401 Unauthorized
-        if (error?.message?.includes('401:')) return false;
-        return failureCount < 3;
+        // Don't retry on 401 Unauthorized or network errors
+        if (error?.message?.includes('401:') || error?.message?.includes('Network error')) return false;
+        return failureCount < 2;
+      },
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: false,
+      onError: (error) => {
+        console.warn('Mutation error caught:', error);
       },
     },
   },
