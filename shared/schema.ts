@@ -62,6 +62,8 @@ export const insertTransactionSchema = createInsertSchema(transactions).pick({
   paymentStatus: true,
   bookingType: true,
   bookingDetails: true,
+}).extend({
+  userId: z.number().optional(),
 });
 
 export const insertSavedPlaceSchema = createInsertSchema(savedPlaces).pick({

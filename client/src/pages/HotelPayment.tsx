@@ -20,6 +20,7 @@ const HotelPayment = () => {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
   const [paymentDetails, setPaymentDetails] = useState<any>({});
   const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const paymentMethods: PaymentMethod[] = [
     {
@@ -182,27 +183,30 @@ const HotelPayment = () => {
   };
 
   const handlePayment = async () => {
-    // Generate random transaction outcome
-    const outcomes = ['successful', 'pending', 'unsuccessful'];
-    const randomOutcome = outcomes[Math.floor(Math.random() * outcomes.length)];
+    setIsProcessing(true);
     
-    // Create transaction record
-    const transactionData = {
-      userId: 1, // Mock user ID
-      amount: bookingData.totalAmount,
-      paymentMethod: selectedPaymentMethod,
-      paymentStatus: randomOutcome === 'successful' ? 'completed' : randomOutcome,
-      bookingType: 'hotel',
-      bookingDetails: JSON.stringify({
-        hotelName: bookingData.hotel.name,
-        roomType: bookingData.roomType,
-        numberOfRooms: bookingData.numberOfRooms,
-        checkInDate: bookingData.checkInDate,
-        checkOutDate: bookingData.checkOutDate
-      })
-    };
-
     try {
+      // Generate random transaction outcome
+      const outcomes = ['successful', 'pending', 'unsuccessful'];
+      const randomOutcome = outcomes[Math.floor(Math.random() * outcomes.length)];
+      
+      // Create transaction record with proper schema
+      const transactionData = {
+        userId: 1, // Mock user ID
+        transactionId: `TXN-${Date.now()}`,
+        amount: (bookingData.totalAmount / 100).toFixed(2), // Convert to decimal string with 2 decimals
+        paymentMethod: selectedPaymentMethod,
+        paymentStatus: randomOutcome === 'successful' ? 'completed' : randomOutcome,
+        bookingType: 'hotel',
+        bookingDetails: JSON.stringify({
+          hotelName: bookingData.hotel.name,
+          roomType: bookingData.roomType,
+          numberOfRooms: bookingData.numberOfRooms,
+          checkInDate: bookingData.checkInDate,
+          checkOutDate: bookingData.checkOutDate
+        })
+      };
+
       const response = await fetch('/api/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -223,9 +227,16 @@ const HotelPayment = () => {
         }));
         
         setLocation('/payment-status');
+      } else {
+        const errorData = await response.json();
+        console.error('Payment failed:', errorData);
+        alert('Payment processing failed. Please try again.');
       }
     } catch (error) {
       console.error('Payment processing error:', error);
+      alert('Payment processing failed. Please try again.');
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -360,11 +371,11 @@ const HotelPayment = () => {
             {/* Pay Button */}
             <Button
               onClick={handlePayment}
-              disabled={!selectedPaymentMethod || !isPaymentDetailsComplete()}
+              disabled={!selectedPaymentMethod || !isPaymentDetailsComplete() || isProcessing}
               className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600"
               size="lg"
             >
-              Pay ${(bookingData.totalAmount / 100).toFixed(2)}
+              {isProcessing ? 'Processing Payment...' : `Pay $${(bookingData.totalAmount / 100).toFixed(2)}`}
             </Button>
           </div>
         </div>
