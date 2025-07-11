@@ -4,6 +4,8 @@
 
 Pack Your Bags is a full-stack web application designed as an AI-powered travel planning and booking platform. The application provides users with intelligent trip planning, local guide services, translation capabilities, and booking assistance through a modern, responsive interface.
 
+**Recent Migration**: Successfully migrated from Lovable to Replit environment (January 11, 2025), including routing updates from react-router-dom to wouter and implementation of comprehensive navigation system with dedicated pages for all main features.
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -26,8 +28,9 @@ The application follows a monorepo structure with a React frontend and Express.j
 - **UI Framework**: Shadcn/ui components built on Radix UI primitives
 - **Styling**: Tailwind CSS with custom travel-themed design system
 - **State Management**: React Query (@tanstack/react-query) for server state
-- **Routing**: React Router for client-side navigation
+- **Routing**: Wouter for lightweight client-side navigation (migrated from react-router-dom)
 - **Forms**: React Hook Form with Zod validation
+- **Navigation**: Side drawer menu system with dedicated pages for user features
 
 ### Backend Architecture
 - **Framework**: Express.js with TypeScript
@@ -64,6 +67,13 @@ The application uses a simple user authentication schema with:
 2. **Local Guide Services**: Personalized recommendations and local insights
 3. **Real-time Translation**: Multi-language support with voice and text input
 4. **Booking Management**: Integrated booking system for transportation and accommodations
+5. **User Account System**: Complete navigation system with dedicated pages for:
+   - Booked Plans (trip management and cancellation)
+   - Transactions (payment history and details)
+   - Saved Places (favorite destinations)
+   - Trip History (completed travel records)
+   - Profile (user information and travel preferences)
+   - Settings (theme toggle and language selection)
 
 ## External Dependencies
 
