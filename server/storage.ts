@@ -1,4 +1,4 @@
-import { users, transactions, savedPlaces, hotelBookings, type User, type InsertUser, type Transaction, type InsertTransaction, type SavedPlace, type InsertSavedPlace, type HotelBooking, type InsertHotelBooking } from "@shared/schema";
+import { users, transactions, savedPlaces, hotelBookings, bookedPlans, type User, type InsertUser, type Transaction, type InsertTransaction, type SavedPlace, type InsertSavedPlace, type HotelBooking, type InsertHotelBooking, type BookedPlan, type InsertBookedPlan } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 
@@ -25,6 +25,10 @@ export interface IStorage {
   createHotelBooking(booking: InsertHotelBooking): Promise<HotelBooking>;
   getHotelBookingsByUser(userId: number): Promise<HotelBooking[]>;
   updateHotelBookingStatus(id: number, status: string): Promise<HotelBooking | undefined>;
+  createBookedPlan(plan: InsertBookedPlan): Promise<BookedPlan>;
+  getBookedPlansByUser(userId: number): Promise<BookedPlan[]>;
+  getBookedPlanById(id: number): Promise<BookedPlan | undefined>;
+  updateBookedPlanStatus(id: number, status: string): Promise<BookedPlan | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -167,6 +171,39 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return booking || undefined;
   }
+
+  async createBookedPlan(insertPlan: InsertBookedPlan): Promise<BookedPlan> {
+    const [plan] = await db
+      .insert(bookedPlans)
+      .values(insertPlan)
+      .returning();
+    return plan;
+  }
+
+  async getBookedPlansByUser(userId: number): Promise<BookedPlan[]> {
+    return await db
+      .select()
+      .from(bookedPlans)
+      .where(eq(bookedPlans.userId, userId))
+      .orderBy(bookedPlans.createdAt);
+  }
+
+  async getBookedPlanById(id: number): Promise<BookedPlan | undefined> {
+    const [plan] = await db
+      .select()
+      .from(bookedPlans)
+      .where(eq(bookedPlans.id, id));
+    return plan;
+  }
+
+  async updateBookedPlanStatus(id: number, status: string): Promise<BookedPlan | undefined> {
+    const [plan] = await db
+      .update(bookedPlans)
+      .set({ bookingStatus: status, updatedAt: new Date() })
+      .where(eq(bookedPlans.id, id))
+      .returning();
+    return plan;
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -174,20 +211,24 @@ export class MemStorage implements IStorage {
   private transactions: Map<number, Transaction>;
   private savedPlaces: Map<number, SavedPlace>;
   private hotelBookings: Map<number, HotelBooking>;
+  private bookedPlans: Map<number, BookedPlan>;
   currentId: number;
   currentTransactionId: number;
   currentSavedPlaceId: number;
   currentHotelBookingId: number;
+  currentBookedPlanId: number;
 
   constructor() {
     this.users = new Map();
     this.transactions = new Map();
     this.savedPlaces = new Map();
     this.hotelBookings = new Map();
+    this.bookedPlans = new Map();
     this.currentId = 1;
     this.currentTransactionId = 1;
     this.currentSavedPlaceId = 1;
     this.currentHotelBookingId = 1;
+    this.currentBookedPlanId = 1;
   }
 
   async getUser(id: number): Promise<User | undefined> {
@@ -360,6 +401,40 @@ export class MemStorage implements IStorage {
   }
 
   async updateHotelBookingStatus(id: number, status: string): Promise<HotelBooking | undefined> {
+    return undefined;
+  }
+
+  async createBookedPlan(insertPlan: InsertBookedPlan): Promise<BookedPlan> {
+    const id = this.currentBookedPlanId++;
+    const plan: BookedPlan = { 
+      ...insertPlan, 
+      id,
+      bookingStatus: 'confirmed',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.bookedPlans.set(id, plan);
+    return plan;
+  }
+
+  async getBookedPlansByUser(userId: number): Promise<BookedPlan[]> {
+    return Array.from(this.bookedPlans.values()).filter(
+      (plan) => plan.userId === userId,
+    );
+  }
+
+  async getBookedPlanById(id: number): Promise<BookedPlan | undefined> {
+    return this.bookedPlans.get(id);
+  }
+
+  async updateBookedPlanStatus(id: number, status: string): Promise<BookedPlan | undefined> {
+    const plan = this.bookedPlans.get(id);
+    if (plan) {
+      plan.bookingStatus = status;
+      plan.updatedAt = new Date();
+      this.bookedPlans.set(id, plan);
+      return plan;
+    }
     return undefined;
   }
 }

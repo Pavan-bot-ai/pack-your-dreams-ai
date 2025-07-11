@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-import { insertUserSchema, insertTransactionSchema, insertSavedPlaceSchema } from "@shared/schema";
+import { insertUserSchema, insertTransactionSchema, insertSavedPlaceSchema, insertHotelBookingSchema, insertBookedPlanSchema } from "@shared/schema";
 
 // Authentication middleware
 const authenticateToken = async (req: any, res: any, next: any) => {
@@ -270,6 +270,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Booking not found" });
       }
       res.json(booking);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Booked Plans routes
+  app.post("/api/booked-plans", authenticateToken, async (req: any, res) => {
+    try {
+      const planData = insertBookedPlanSchema.parse({
+        ...req.body,
+        userId: req.user.id
+      });
+      const plan = await storage.createBookedPlan(planData);
+      res.json(plan);
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/booked-plans", authenticateToken, async (req: any, res) => {
+    try {
+      const plans = await storage.getBookedPlansByUser(req.user.id);
+      res.json(plans);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/booked-plans/:id", authenticateToken, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const plan = await storage.getBookedPlanById(id);
+      if (!plan) {
+        return res.status(404).json({ error: "Plan not found" });
+      }
+      // Check if the plan belongs to the authenticated user
+      if (plan.userId !== req.user.id) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+      res.json(plan);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/booked-plans/:id/status", authenticateToken, async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      
+      // Check if the plan belongs to the authenticated user
+      const existingPlan = await storage.getBookedPlanById(id);
+      if (!existingPlan || existingPlan.userId !== req.user.id) {
+        return res.status(404).json({ error: "Plan not found" });
+      }
+      
+      const plan = await storage.updateBookedPlanStatus(id, status);
+      res.json(plan);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
     }

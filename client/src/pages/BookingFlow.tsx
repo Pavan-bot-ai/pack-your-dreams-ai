@@ -8,6 +8,8 @@ import { useLocation } from "wouter";
 import TransportSelection from "@/components/TransportSelection";
 import TransportPayment from "@/components/TransportPayment";
 import PaymentStatus from "@/components/PaymentStatus";
+import FinalPlanPage from "@/components/FinalPlanPage";
+import HappyJourneyPage from "@/components/HappyJourneyPage";
 
 interface BookingStep {
   id: number;
@@ -24,12 +26,16 @@ const BookingFlow = () => {
   const [selectedTransport, setSelectedTransport] = useState<any>(null);
   const [paymentResult, setPaymentResult] = useState<any>(null);
   const [isTransportCompleted, setIsTransportCompleted] = useState(false);
+  const [hotelBookingComplete, setHotelBookingComplete] = useState(false);
+  const [showFinalPlan, setShowFinalPlan] = useState(false);
+  const [showHappyJourney, setShowHappyJourney] = useState(false);
+  const [planData, setPlanData] = useState<any>(null);
 
   const steps: BookingStep[] = [
     { id: 1, title: "Plan Selection", icon: FileText, completed: currentStep > 1 },
     { id: 2, title: "Transport Booking", icon: Plane, completed: isTransportCompleted },
-    { id: 3, title: "Hotel Booking", icon: Building, completed: currentStep > 3 },
-    { id: 4, title: "Payment", icon: CreditCard, completed: currentStep > 4 },
+    { id: 3, title: "Hotel Booking", icon: Building, completed: hotelBookingComplete },
+    { id: 4, title: "Payment Summary", icon: CreditCard, completed: currentStep > 4 },
     { id: 5, title: "Final Plan", icon: CheckCircle, completed: currentStep > 5 }
   ];
 
@@ -87,6 +93,87 @@ const BookingFlow = () => {
     
     localStorage.setItem('latestBooking', JSON.stringify(bookingData));
     setLocation('/hotel-booking');
+  };
+
+  const handleHotelBookingComplete = () => {
+    setHotelBookingComplete(true);
+    setCurrentStep(5); // Move to final plan review
+    window.history.replaceState(null, '', `/booking-flow?step=5`);
+    
+    // Prepare final plan data
+    const finalPlanData = {
+      planDetails: selectedPlan?.tripDetails || {},
+      transportDetails: selectedTransport || {},
+      hotelDetails: JSON.parse(localStorage.getItem('selectedHotel') || '{}'),
+      itineraryDetails: selectedPlan?.selectedPlan || {},
+      paymentDetails: {
+        transportAmount: selectedTransport?.price * 100 || 89900,
+        hotelAmount: 149900,
+        itineraryAmount: 29900,
+        totalAmount: (selectedTransport?.price * 100 || 89900) + 149900 + 29900,
+        paymentMethod: 'Credit Card'
+      }
+    };
+    
+    setPlanData(finalPlanData);
+    setShowFinalPlan(true);
+  };
+
+  const handleFinishBooking = async () => {
+    try {
+      // Create the booked plan data
+      const bookedPlanData = {
+        planTitle: `${planData.planDetails.destination} Adventure`,
+        destination: planData.planDetails.destination || 'Bali, Indonesia',
+        planDetails: JSON.stringify(planData.planDetails),
+        transportDetails: JSON.stringify(planData.transportDetails),
+        hotelDetails: JSON.stringify(planData.hotelDetails),
+        itineraryDetails: JSON.stringify(planData.itineraryDetails),
+        totalAmount: planData.paymentDetails.totalAmount,
+        transportAmount: planData.paymentDetails.transportAmount,
+        hotelAmount: planData.paymentDetails.hotelAmount,
+        itineraryAmount: planData.paymentDetails.itineraryAmount,
+        paymentMethod: planData.paymentDetails.paymentMethod,
+        travelDate: planData.planDetails.startDate ? 
+          new Date(planData.planDetails.startDate).toLocaleDateString() : 
+          'Dec 25, 2024',
+        duration: planData.planDetails.duration || '7 days'
+      };
+
+      // Save to backend via API
+      const response = await fetch('/api/booked-plans', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        },
+        body: JSON.stringify(bookedPlanData)
+      });
+
+      if (response.ok) {
+        const savedPlan = await response.json();
+        console.log('Plan saved successfully:', savedPlan);
+        
+        // Hide final plan and show happy journey
+        setShowFinalPlan(false);
+        setShowHappyJourney(true);
+      } else {
+        console.error('Failed to save plan');
+        // Still show happy journey page even if save fails
+        setShowFinalPlan(false);
+        setShowHappyJourney(true);
+      }
+    } catch (error) {
+      console.error('Error saving plan:', error);
+      // Still show happy journey page even if there's an error
+      setShowFinalPlan(false);
+      setShowHappyJourney(true);
+    }
+  };
+
+  const handleCloseHappyJourney = () => {
+    setShowHappyJourney(false);
+    setLocation('/booked-plans');
   };
 
   const renderStepContent = () => {
@@ -272,22 +359,21 @@ const BookingFlow = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <CheckCircle className="h-5 w-5 text-green-600" />
-                Transportation Confirmed
+                Final Plan Review
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="text-center py-8">
                   <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">Transportation Booked!</h3>
-                  <p className="text-gray-600">Your transportation is confirmed. Continue to hotel booking.</p>
+                  <h3 className="text-xl font-semibold mb-2">All Bookings Complete!</h3>
+                  <p className="text-gray-600">Review your complete travel plan and confirm your booking.</p>
                 </div>
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h4 className="font-medium mb-2">Booking Reference</h4>
-                  <p className="text-sm text-green-700">TRP-{Date.now()}</p>
-                </div>
-                <Button onClick={() => setLocation('/hotel-booking-success')} className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600">
-                  Continue to Hotel Booking
+                <Button 
+                  onClick={handleHotelBookingComplete} 
+                  className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700"
+                >
+                  Review Final Plan
                 </Button>
               </div>
             </CardContent>
@@ -375,6 +461,25 @@ const BookingFlow = () => {
           )}
         </div>
       </div>
+
+      {/* Final Plan Page Modal */}
+      {showFinalPlan && planData && (
+        <FinalPlanPage
+          isOpen={showFinalPlan}
+          onClose={() => setShowFinalPlan(false)}
+          planData={planData}
+          onFinishBooking={handleFinishBooking}
+        />
+      )}
+
+      {/* Happy Journey Page Modal */}
+      {showHappyJourney && (
+        <HappyJourneyPage
+          isOpen={showHappyJourney}
+          onClose={handleCloseHappyJourney}
+          planData={planData?.planDetails}
+        />
+      )}
     </div>
   );
 };

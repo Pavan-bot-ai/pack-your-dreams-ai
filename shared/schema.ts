@@ -53,6 +53,27 @@ export const hotelBookings = pgTable("hotel_bookings", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const bookedPlans = pgTable("booked_plans", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  planTitle: text("plan_title").notNull(),
+  destination: text("destination").notNull(),
+  planDetails: text("plan_details").notNull(), // JSON string of the plan
+  transportDetails: text("transport_details").notNull(), // JSON string of transport booking
+  hotelDetails: text("hotel_details").notNull(), // JSON string of hotel booking
+  itineraryDetails: text("itinerary_details").notNull(), // JSON string of itinerary
+  totalAmount: integer("total_amount").notNull(), // in cents
+  transportAmount: integer("transport_amount").notNull(), // in cents
+  hotelAmount: integer("hotel_amount").notNull(), // in cents
+  itineraryAmount: integer("itinerary_amount").notNull(), // in cents
+  paymentMethod: text("payment_method").notNull(),
+  bookingStatus: text("booking_status").notNull().default("confirmed"),
+  travelDate: text("travel_date").notNull(),
+  duration: text("duration").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -93,6 +114,23 @@ export const insertHotelBookingSchema = createInsertSchema(hotelBookings).pick({
   transactionId: true,
 });
 
+export const insertBookedPlanSchema = createInsertSchema(bookedPlans).pick({
+  userId: true,
+  planTitle: true,
+  destination: true,
+  planDetails: true,
+  transportDetails: true,
+  hotelDetails: true,
+  itineraryDetails: true,
+  totalAmount: true,
+  transportAmount: true,
+  hotelAmount: true,
+  itineraryAmount: true,
+  paymentMethod: true,
+  travelDate: true,
+  duration: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
@@ -101,3 +139,5 @@ export type InsertSavedPlace = z.infer<typeof insertSavedPlaceSchema>;
 export type SavedPlace = typeof savedPlaces.$inferSelect;
 export type InsertHotelBooking = z.infer<typeof insertHotelBookingSchema>;
 export type HotelBooking = typeof hotelBookings.$inferSelect;
+export type InsertBookedPlan = z.infer<typeof insertBookedPlanSchema>;
+export type BookedPlan = typeof bookedPlans.$inferSelect;
