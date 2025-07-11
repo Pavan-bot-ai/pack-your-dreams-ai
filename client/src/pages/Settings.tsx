@@ -101,12 +101,12 @@ const Settings = () => {
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
                     Choose your preferred language for the app interface
                   </p>
-                  <Select value={selectedLanguage} onValueChange={handleLanguageChange}>
+                  <Select value={currentLanguage} onValueChange={handleLanguageChange}>
                     <SelectTrigger className="w-full dark:bg-gray-700 dark:border-gray-600 dark:text-white">
                       <SelectValue placeholder="Select a language" />
                     </SelectTrigger>
                     <SelectContent className="dark:bg-gray-700 dark:border-gray-600">
-                      {languages.map((language) => (
+                      {availableLanguages.map((language) => (
                         <SelectItem 
                           key={language.code} 
                           value={language.code}
