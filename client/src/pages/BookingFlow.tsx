@@ -535,7 +535,7 @@ const BookingFlow = () => {
         </div>
 
         {/* Navigation */}
-        <div className="flex justify-start">
+        <div className="flex justify-between">
           <Button
             variant="outline"
             onClick={handlePrevStep}
@@ -544,6 +544,17 @@ const BookingFlow = () => {
             <ArrowLeft className="h-4 w-4 mr-2" />
             Previous
           </Button>
+
+          {/* Only show Next button before transport booking completion (step 2) */}
+          {currentStep === 1 && (
+            <Button
+              onClick={handleNextStep}
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+            >
+              Next
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          )}
         </div>
       </div>
 
