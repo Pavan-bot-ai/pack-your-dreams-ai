@@ -123,22 +123,48 @@ const FinalPlanPage = ({ isOpen, onClose, planData, onFinishBooking }: FinalPlan
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {planData.itineraryDetails?.days?.map((day: any, index: number) => (
+                {planData.itineraryDetails?.itinerary?.map((day: any, index: number) => (
                   <div key={index} className="border rounded-lg p-4">
-                    <h4 className="font-semibold text-lg mb-2">Day {index + 1}: {day.title}</h4>
+                    <h4 className="font-semibold text-lg mb-2">Day {day.day}</h4>
                     <div className="space-y-2">
                       {day.activities?.map((activity: any, actIndex: number) => (
                         <div key={actIndex} className="flex items-start gap-3">
                           <div className="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0"></div>
                           <div>
-                            <p className="font-medium">{activity.time} - {activity.title}</p>
-                            <p className="text-gray-600 text-sm">{activity.description}</p>
+                            <p className="font-medium">{activity}</p>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
-                )) || (
+                )) || planData.itineraryDetails?.highlights ? (
+                  <div className="space-y-4">
+                    <div className="bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg p-4">
+                      <h4 className="font-semibold text-lg mb-3">{planData.itineraryDetails?.title || 'Your Selected Plan'}</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <h5 className="font-medium text-blue-700 mb-2">Plan Highlights</h5>
+                          <ul className="space-y-1">
+                            {planData.itineraryDetails?.highlights?.map((highlight: string, index: number) => (
+                              <li key={index} className="flex items-center gap-2 text-sm">
+                                <CheckCircle className="w-4 h-4 text-green-500" />
+                                <span>{highlight}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div>
+                          <h5 className="font-medium text-blue-700 mb-2">Trip Details</h5>
+                          <div className="space-y-1 text-sm">
+                            <p><span className="font-medium">Duration:</span> {planData.itineraryDetails?.duration}</p>
+                            <p><span className="font-medium">Feasibility Score:</span> {planData.itineraryDetails?.feasibilityScore}%</p>
+                            <p><span className="font-medium">Estimated Cost:</span> {planData.itineraryDetails?.estimatedCost}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
                   <div className="bg-gray-50 rounded-lg p-4 text-center">
                     <p className="text-gray-600">Detailed itinerary will be generated after booking confirmation</p>
                   </div>
