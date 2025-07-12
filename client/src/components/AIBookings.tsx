@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import TransportPayment from "./TransportPayment";
 import { 
   Car, 
   Ticket, 
@@ -24,6 +25,8 @@ interface AIBookingsProps {
 
 const AIBookings = ({ isOpen, onClose }: AIBookingsProps) => {
   const [activeTab, setActiveTab] = useState<'taxi' | 'tickets' | 'other'>('taxi');
+  const [showPayment, setShowPayment] = useState(false);
+  const [currentBooking, setCurrentBooking] = useState<any>(null);
   const [bookingData, setBookingData] = useState({
     pickup: '',
     dropoff: '',
@@ -35,10 +38,57 @@ const AIBookings = ({ isOpen, onClose }: AIBookingsProps) => {
     quantity: '1'
   });
 
-  const handleBooking = (type: string) => {
-    console.log(`Booking ${type}:`, bookingData);
-    alert(`${type} booking request submitted! You'll receive confirmation shortly.`);
-    onClose();
+  const handleBooking = (type: string, serviceData?: any) => {
+    let bookingDetails;
+    
+    if (activeTab === 'taxi') {
+      bookingDetails = {
+        type: 'taxi',
+        serviceName: type,
+        description: `Taxi service from ${bookingData.pickup || 'Current Location'} to ${bookingData.dropoff || 'Destination'}`,
+        amount: Math.floor(Math.random() * 500) + 200, // Random amount between 200-700
+        details: {
+          pickup: bookingData.pickup,
+          dropoff: bookingData.dropoff,
+          date: bookingData.date,
+          time: bookingData.time,
+          passengers: bookingData.passengers,
+          vehicleType: type
+        }
+      };
+    } else if (activeTab === 'tickets') {
+      bookingDetails = {
+        type: 'ticket',
+        serviceName: type,
+        description: `${type} for ${bookingData.destination || 'your destination'}`,
+        amount: Math.floor(Math.random() * 2000) + 500, // Random amount between 500-2500
+        details: {
+          destination: bookingData.destination,
+          quantity: bookingData.quantity,
+          ticketType: type
+        }
+      };
+    } else if (activeTab === 'other') {
+      bookingDetails = {
+        type: 'service',
+        serviceName: type,
+        description: `${type} booking service`,
+        amount: Math.floor(Math.random() * 1500) + 300, // Random amount between 300-1800
+        details: {
+          serviceType: type,
+          bookingData: bookingData
+        }
+      };
+    }
+
+    setCurrentBooking(bookingDetails);
+    setShowPayment(true);
+  };
+
+  const handlePaymentClose = () => {
+    setShowPayment(false);
+    setCurrentBooking(null);
+    onClose(); // Close the main booking dialog too
   };
 
   const updateBookingData = (field: string, value: string) => {
@@ -65,6 +115,7 @@ const AIBookings = ({ isOpen, onClose }: AIBookingsProps) => {
   ];
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -314,6 +365,16 @@ const AIBookings = ({ isOpen, onClose }: AIBookingsProps) => {
         )}
       </DialogContent>
     </Dialog>
+    
+    {/* Payment Dialog */}
+    {showPayment && currentBooking && (
+      <TransportPayment
+        isOpen={showPayment}
+        onClose={handlePaymentClose}
+        bookingDetails={currentBooking}
+      />
+    )}
+    </>
   );
 };
 

@@ -4,6 +4,7 @@ import {
   savedPlaces, 
   hotelBookings, 
   bookedPlans, 
+  transportBookings,
   tourRequests, 
   guideTours, 
   tourIdeas, 
@@ -24,7 +25,9 @@ import {
   type HotelBooking, 
   type InsertHotelBooking, 
   type BookedPlan, 
-  type InsertBookedPlan, 
+  type InsertBookedPlan,
+  type TransportBooking,
+  type InsertTransportBooking, 
   type TourRequest, 
   type InsertTourRequest, 
   type GuideTour, 
@@ -131,6 +134,11 @@ export interface IStorage {
   createUserNotification(notification: InsertUserNotification): Promise<UserNotification>;
   getUserNotifications(userId: number): Promise<UserNotification[]>;
   markUserNotificationAsRead(id: number): Promise<void>;
+  
+  // Transport booking methods
+  createTransportBooking(booking: InsertTransportBooking): Promise<TransportBooking>;
+  getTransportBookingsByUser(userId: number): Promise<TransportBooking[]>;
+  getTransportBookingById(id: number): Promise<TransportBooking | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -603,6 +611,30 @@ export class DatabaseStorage implements IStorage {
     await db.update(userNotifications)
       .set({ isRead: true })
       .where(eq(userNotifications.id, id));
+  }
+
+  async createTransportBooking(insertBooking: InsertTransportBooking): Promise<TransportBooking> {
+    const [booking] = await db
+      .insert(transportBookings)
+      .values(insertBooking)
+      .returning();
+    return booking;
+  }
+
+  async getTransportBookingsByUser(userId: number): Promise<TransportBooking[]> {
+    return await db
+      .select()
+      .from(transportBookings)
+      .where(eq(transportBookings.userId, userId))
+      .orderBy(desc(transportBookings.createdAt));
+  }
+
+  async getTransportBookingById(id: number): Promise<TransportBooking | undefined> {
+    const [booking] = await db
+      .select()
+      .from(transportBookings)
+      .where(eq(transportBookings.id, id));
+    return booking || undefined;
   }
 }
 

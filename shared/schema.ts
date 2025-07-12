@@ -47,6 +47,21 @@ export const transactions = pgTable("transactions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const transportBookings = pgTable("transport_bookings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  bookingType: text("booking_type").notNull(), // taxi, flight, train, bus, event, hotel, restaurant, activity
+  serviceDetails: text("service_details").notNull(), // JSON string with service-specific details
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  paymentMethod: text("payment_method").notNull(), // credit_card, debit_card, upi, net_banking, digital_wallet
+  paymentDetails: text("payment_details").notNull(), // JSON string with payment-specific details
+  transactionId: text("transaction_id").unique().notNull(),
+  paymentStatus: text("payment_status").notNull().default("successful"), // successful, pending, failed
+  bookingStatus: text("booking_status").notNull().default("confirmed"), // confirmed, cancelled
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const savedPlaces = pgTable("saved_places", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
@@ -96,6 +111,11 @@ export const bookedPlans = pgTable("booked_plans", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// Transport booking schema types
+export const insertTransportBookingSchema = createInsertSchema(transportBookings);
+export type InsertTransportBooking = z.infer<typeof insertTransportBookingSchema>;
+export type TransportBooking = typeof transportBookings.$inferSelect;
 
 // Guide-specific tables
 export const tourRequests = pgTable("tour_requests", {

@@ -24,21 +24,58 @@ const Transactions = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
-  // Fetch transactions from API
-  const { data: transactions = [], isLoading, error } = useQuery({
+  // Fetch both regular transactions and transport bookings
+  const { data: transactions = [], isLoading: transactionsLoading, error: transactionsError } = useQuery({
     queryKey: ["/api/transactions?userId=1"],
   });
 
-  const filteredTransactions = transactions.filter((transaction: Transaction) => {
-    let bookingDetails;
-    try {
-      bookingDetails = JSON.parse(transaction.bookingDetails);
-    } catch {
-      bookingDetails = { provider: "Unknown" };
-    }
-    
+  const { data: transportBookings = [], isLoading: bookingsLoading, error: bookingsError } = useQuery({
+    queryKey: ["/api/transport-bookings"],
+  });
+
+  const isLoading = transactionsLoading || bookingsLoading;
+  const error = transactionsError || bookingsError;
+
+  // Combine and normalize transaction data
+  const allTransactions = [
+    ...transactions.map((t: Transaction) => ({
+      ...t,
+      type: 'legacy',
+      serviceName: (() => {
+        try {
+          const details = JSON.parse(t.bookingDetails);
+          return details.provider || t.bookingType;
+        } catch {
+          return t.bookingType;
+        }
+      })(),
+      amount: parseFloat(t.amount),
+      createdAt: t.createdAt,
+    })),
+    ...transportBookings.map((b: any) => ({
+      id: b.id,
+      transactionId: b.transactionId,
+      amount: parseFloat(b.amount),
+      paymentMethod: b.paymentMethod,
+      paymentStatus: b.paymentStatus,
+      bookingType: b.bookingType,
+      type: 'transport',
+      serviceName: (() => {
+        try {
+          const details = JSON.parse(b.serviceDetails);
+          return details.serviceName || b.bookingType;
+        } catch {
+          return b.bookingType;
+        }
+      })(),
+      createdAt: b.createdAt,
+      serviceDetails: b.serviceDetails,
+    }))
+  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+  const filteredTransactions = allTransactions.filter((transaction: any) => {
     const matchesSearch = 
-      bookingDetails.provider?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      transaction.serviceName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       transaction.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       transaction.paymentMethod.toLowerCase().includes(searchTerm.toLowerCase());
     
@@ -61,10 +98,10 @@ const Transactions = () => {
 
   const getTotalAmount = (status?: string) => {
     const relevantTransactions = status ? 
-      filteredTransactions.filter((t: Transaction) => t.paymentStatus === status) : 
+      filteredTransactions.filter((t: any) => t.paymentStatus === status) : 
       filteredTransactions;
-    return relevantTransactions.reduce((sum: number, transaction: Transaction) => 
-      sum + parseFloat(transaction.amount), 0);
+    return relevantTransactions.reduce((sum: number, transaction: any) => 
+      sum + transaction.amount, 0);
   };
 
   if (isLoading) {
@@ -201,38 +238,76 @@ const Transactions = () => {
               </CardContent>
             </Card>
           ) : (
-            filteredTransactions.map((transaction: Transaction) => {
-              let bookingDetails;
+            filteredTransactions.map((transaction: any) => {
+              let serviceDetails;
               try {
-                bookingDetails = JSON.parse(transaction.bookingDetails);
+                if (transaction.type === 'transport') {
+                  serviceDetails = JSON.parse(transaction.serviceDetails);
+                } else {
+                  serviceDetails = JSON.parse(transaction.bookingDetails || '{}');
+                }
               } catch {
-                bookingDetails = { provider: "Unknown Service" };
+                serviceDetails = { serviceName: "Unknown Service", provider: "Unknown Service" };
               }
 
+              const getTransactionIcon = () => {
+                if (transaction.type === 'transport') {
+                  switch (transaction.bookingType) {
+                    case 'taxi': return '🚕';
+                    case 'ticket': return '🎫';
+                    case 'service': return '🛎️';
+                    default: return '💳';
+                  }
+                }
+                return '💳';
+              };
+
               return (
-                <Card key={transaction.id} className="hover:shadow-md transition-shadow">
+                <Card key={`${transaction.type}-${transaction.id}`} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
+                          <span className="text-lg">{getTransactionIcon()}</span>
                           <h3 className="font-semibold">
-                            {bookingDetails.provider || "Transport Booking"}
+                            {transaction.serviceName || serviceDetails.provider || "Transport Booking"}
                           </h3>
                           <Badge className={getStatusColor(transaction.paymentStatus)}>
                             {transaction.paymentStatus}
                           </Badge>
+                          {transaction.type === 'transport' && (
+                            <Badge variant="outline" className="text-xs">
+                              New System
+                            </Badge>
+                          )}
                         </div>
                         <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                           <span>ID: {transaction.transactionId}</span>
                           <span>Date: {new Date(transaction.createdAt).toLocaleDateString()}</span>
-                          <span>Payment: {transaction.paymentMethod}</span>
+                          <span>Payment: {transaction.paymentMethod.replace('_', ' ')}</span>
                           <span>Type: {transaction.bookingType}</span>
                         </div>
+                        
+                        {/* Enhanced details for transport bookings */}
+                        {transaction.type === 'transport' && transaction.bookingType === 'taxi' && serviceDetails.pickup && (
+                          <div className="text-sm text-gray-500 mt-2 p-2 bg-gray-50 rounded">
+                            <span>{serviceDetails.pickup}</span>
+                            <span className="mx-2">→</span>
+                            <span>{serviceDetails.dropoff || 'Destination'}</span>
+                          </div>
+                        )}
+                        
+                        {transaction.type === 'transport' && transaction.bookingType === 'ticket' && serviceDetails.destination && (
+                          <div className="text-sm text-gray-500 mt-2 p-2 bg-gray-50 rounded">
+                            Destination: {serviceDetails.destination}
+                            {serviceDetails.quantity && ` • ${serviceDetails.quantity} tickets`}
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="text-right">
                           <div className="text-xl font-bold">
-                            ${parseFloat(transaction.amount).toFixed(2)}
+                            ₹{transaction.amount.toLocaleString()}
                           </div>
                         </div>
                         <Button

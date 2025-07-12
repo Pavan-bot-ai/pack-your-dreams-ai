@@ -849,5 +849,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Transport booking routes
+  app.post("/api/transport-bookings", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const { bookingType, serviceDetails, amount, paymentMethod, paymentDetails } = req.body;
+      
+      // Generate unique transaction ID
+      const transactionId = `TXN${Date.now()}${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
+      
+      const booking = await storage.createTransportBooking({
+        userId: req.user.id,
+        bookingType,
+        serviceDetails,
+        amount,
+        paymentMethod,
+        paymentDetails,
+        transactionId,
+        paymentStatus: "successful",
+        bookingStatus: "confirmed"
+      });
+
+      res.json({ 
+        success: true, 
+        booking,
+        transactionId: booking.transactionId 
+      });
+    } catch (error: any) {
+      console.error("Transport booking error:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to create booking: " + error.message 
+      });
+    }
+  });
+
+  app.get("/api/transport-bookings", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const bookings = await storage.getTransportBookingsByUser(req.user.id);
+      res.json(bookings);
+    } catch (error: any) {
+      console.error("Get transport bookings error:", error);
+      res.status(500).json({ 
+        success: false, 
+        message: "Failed to get bookings: " + error.message 
+      });
+    }
+  });
+
   return httpServer;
 }
