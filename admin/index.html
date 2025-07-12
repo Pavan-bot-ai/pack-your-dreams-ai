@@ -13,6 +13,42 @@
         .card-shadow { box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         .stat-card { transition: transform 0.2s; }
         .stat-card:hover { transform: translateY(-2px); }
+        
+        /* Mobile responsive improvements */
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr !important;
+                gap: 1rem !important;
+            }
+            
+            .stat-card {
+                padding: 1rem !important;
+            }
+            
+            .text-3xl {
+                font-size: 1.5rem !important;
+            }
+            
+            .container {
+                padding: 1rem !important;
+            }
+            
+            .flex {
+                flex-direction: column !important;
+                gap: 1rem;
+            }
+            
+            .space-x-4 > * + * {
+                margin-left: 0 !important;
+            }
+        }
+        
+        /* Chart containers responsive */
+        @media (max-width: 640px) {
+            [style*="height: 180px"], [style*="height: 200px"] {
+                height: 140px !important;
+            }
+        }
     </style>
 </head>
 <body class="bg-gray-50">
@@ -124,14 +160,18 @@
                 </div>
 
                 <!-- Charts -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-lg card-shadow">
-                        <h3 class="text-lg font-semibold mb-4">User Growth</h3>
-                        <canvas id="userGrowthChart" width="400" height="200"></canvas>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded-lg card-shadow">
+                        <h3 class="text-lg font-semibold mb-3">User Growth</h3>
+                        <div style="height: 180px; position: relative;">
+                            <canvas id="userGrowthChart"></canvas>
+                        </div>
                     </div>
-                    <div class="bg-white p-6 rounded-lg card-shadow">
-                        <h3 class="text-lg font-semibold mb-4">Revenue Trends</h3>
-                        <canvas id="revenueChart" width="400" height="200"></canvas>
+                    <div class="bg-white p-4 rounded-lg card-shadow">
+                        <h3 class="text-lg font-semibold mb-3">Revenue Trends</h3>
+                        <div style="height: 180px; position: relative;">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
                     </div>
                 </div>
 
@@ -225,14 +265,18 @@
 
             <!-- Revenue Tab -->
             <div id="revenue" class="tab-content hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                    <div class="bg-white p-6 rounded-lg card-shadow">
-                        <h3 class="text-lg font-semibold mb-4">Revenue by Service</h3>
-                        <canvas id="revenueByServiceChart" width="400" height="300"></canvas>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-white p-4 rounded-lg card-shadow">
+                        <h3 class="text-lg font-semibold mb-3">Revenue by Service</h3>
+                        <div style="height: 200px; position: relative;">
+                            <canvas id="revenueByServiceChart"></canvas>
+                        </div>
                     </div>
-                    <div class="bg-white p-6 rounded-lg card-shadow">
-                        <h3 class="text-lg font-semibold mb-4">Monthly Revenue</h3>
-                        <canvas id="monthlyRevenueChart" width="400" height="300"></canvas>
+                    <div class="bg-white p-4 rounded-lg card-shadow">
+                        <h3 class="text-lg font-semibold mb-3">Monthly Revenue</h3>
+                        <div style="height: 200px; position: relative;">
+                            <canvas id="monthlyRevenueChart"></canvas>
+                        </div>
                     </div>
                 </div>
                 

@@ -270,14 +270,29 @@ function loadUserGrowthChart() {
                 data: [12, 19, 15, 25, 32, 28],
                 borderColor: 'rgb(59, 130, 246)',
                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                tension: 0.4
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 3
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
             scales: {
-                y: { beginAtZero: true }
+                y: { 
+                    beginAtZero: true,
+                    grid: { display: false },
+                    ticks: { font: { size: 10 } }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 10 } }
+                }
             }
         }
     });
@@ -294,14 +309,28 @@ function loadRevenueChart() {
                 data: [1200, 1900, 1500, 2500, 3200, 2800],
                 backgroundColor: 'rgba(16, 185, 129, 0.8)',
                 borderColor: 'rgb(16, 185, 129)',
-                borderWidth: 1
+                borderWidth: 1,
+                borderRadius: 4
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
             scales: {
-                y: { beginAtZero: true }
+                y: { 
+                    beginAtZero: true,
+                    grid: { display: false },
+                    ticks: { font: { size: 10 } }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 10 } }
+                }
             }
         }
     });
@@ -320,12 +349,24 @@ function loadRevenueByServiceChart(data) {
                     '#10B981',
                     '#F59E0B',
                     '#EF4444'
-                ]
+                ],
+                borderWidth: 0
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        font: { size: 10 },
+                        padding: 10,
+                        usePointStyle: true
+                    }
+                }
+            },
+            cutout: '60%'
         }
     });
 }
@@ -341,14 +382,30 @@ function loadMonthlyRevenueChart(data) {
                 data: [5000, 7500, 6200, 8900, 11200, 9800],
                 borderColor: 'rgb(168, 85, 247)',
                 backgroundColor: 'rgba(168, 85, 247, 0.1)',
-                tension: 0.4
+                tension: 0.4,
+                borderWidth: 2,
+                pointRadius: 3,
+                fill: true
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
             scales: {
-                y: { beginAtZero: true }
+                y: { 
+                    beginAtZero: true,
+                    grid: { display: false },
+                    ticks: { font: { size: 10 } }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 10 } }
+                }
             }
         }
     });
