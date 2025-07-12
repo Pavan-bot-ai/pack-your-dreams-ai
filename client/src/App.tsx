@@ -94,24 +94,30 @@ const App = () => {
   };
 
   const handleLogout = async () => {
-    const token = localStorage.getItem("travelApp_token");
-    
-    if (token) {
-      try {
-        await fetch("/api/auth/logout", {
+    try {
+      const token = localStorage.getItem("travelApp_token");
+      
+      if (token) {
+        const response = await fetch("/api/auth/logout", {
           method: "POST",
           headers: {
             "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
           },
         });
-      } catch (error) {
-        // Ignore network errors during logout
+        
+        if (!response.ok) {
+          console.warn("Logout request failed:", response.status);
+        }
       }
+    } catch (error) {
+      console.warn("Network error during logout:", error);
+    } finally {
+      // Always clear local storage and user state, regardless of server response
+      localStorage.removeItem("travelApp_token");
+      localStorage.removeItem("travelApp_currentUser");
+      setCurrentUser(null);
     }
-    
-    localStorage.removeItem("travelApp_token");
-    localStorage.removeItem("travelApp_currentUser");
-    setCurrentUser(null);
   };
 
   const handleLoginClick = () => {

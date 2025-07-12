@@ -292,15 +292,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  app.post("/api/auth/logout", authenticateToken, async (req: any, res) => {
-    try {
-      await storage.clearUserSession(req.user.id);
-      res.json({ message: "Logged out successfully" });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-
   app.post("/api/auth/activity", authenticateToken, async (req: any, res) => {
     try {
       await storage.updateUserActivity(req.user.id);
