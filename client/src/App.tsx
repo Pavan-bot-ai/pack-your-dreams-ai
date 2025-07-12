@@ -43,12 +43,37 @@ const App = () => {
   const [showAuth, setShowAuth] = useState(false);
 
   useEffect(() => {
-    // Check for existing user session
-    const user = localStorage.getItem("travelApp_currentUser");
-    if (user) {
-      setCurrentUser(JSON.parse(user));
-    }
-    setIsLoading(false);
+    // Check for existing user session and validate token
+    const checkSession = async () => {
+      const token = localStorage.getItem("travelApp_token");
+      const storedUser = localStorage.getItem("travelApp_currentUser");
+      
+      if (token && storedUser) {
+        try {
+          // Validate token with server
+          const response = await fetch("/api/auth/me", {
+            headers: {
+              "Authorization": `Bearer ${token}`,
+            },
+          });
+
+          if (response.ok) {
+            const user = await response.json();
+            setCurrentUser(user);
+          } else {
+            // Token is invalid, clear storage
+            localStorage.removeItem("travelApp_token");
+            localStorage.removeItem("travelApp_currentUser");
+          }
+        } catch (error) {
+          // Network error, use stored user for offline functionality
+          setCurrentUser(JSON.parse(storedUser));
+        }
+      }
+      setIsLoading(false);
+    };
+
+    checkSession();
   }, []);
 
   const handleAuthSuccess = (user: any) => {
@@ -67,7 +92,23 @@ const App = () => {
     setShowGuideRegistration(false);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const token = localStorage.getItem("travelApp_token");
+    
+    if (token) {
+      try {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+      } catch (error) {
+        // Ignore network errors during logout
+      }
+    }
+    
+    localStorage.removeItem("travelApp_token");
     localStorage.removeItem("travelApp_currentUser");
     setCurrentUser(null);
   };
@@ -95,7 +136,13 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <GuideRegistration onRegistrationComplete={handleGuideRegistrationComplete} />
+          <GuideRegistration 
+            onRegistrationComplete={handleGuideRegistrationComplete}
+            onBack={() => {
+              setShowGuideRegistration(false);
+              setShowAuth(true);
+            }}
+          />
         </TooltipProvider>
       </QueryClientProvider>
     );

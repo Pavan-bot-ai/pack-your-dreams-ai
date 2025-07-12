@@ -5,11 +5,34 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
   password: text("password").notNull(),
+  name: text("name").notNull(),
+  role: text("role").default("user"), // 'user' or 'guide'
   sessionToken: text("session_token"),
   sessionExpiry: timestamp("session_expiry"),
   language: text("language").default("en"),
   lastActiveAt: timestamp("last_active_at").defaultNow(),
+  isRegistrationComplete: boolean("is_registration_complete").default(true),
+  
+  // Guide-specific fields
+  bio: text("bio"),
+  phone: text("phone"),
+  experience: text("experience"),
+  certification: text("certification"),
+  hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }),
+  serviceAreas: text("service_areas").array(),
+  languages: text("languages").array(),
+  tourInterests: text("tour_interests").array(),
+  profileImageUrl: text("profile_image_url"),
+  rating: decimal("rating", { precision: 3, scale: 2 }).default("0"),
+  totalReviews: integer("total_reviews").default(0),
+  totalEarnings: decimal("total_earnings", { precision: 10, scale: 2 }).default("0"),
+  completedTours: integer("completed_tours").default(0),
+  profileCompleted: boolean("profile_completed").default(false),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const transactions = pgTable("transactions", {
@@ -76,7 +99,26 @@ export const bookedPlans = pgTable("booked_plans", {
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
+  email: true,
   password: true,
+  name: true,
+  role: true,
+}).extend({
+  role: z.enum(["user", "guide"]).default("user"),
+});
+
+export const updateUserGuideSchema = createInsertSchema(users).pick({
+  bio: true,
+  phone: true,
+  experience: true,
+  certification: true,
+  hourlyRate: true,
+  serviceAreas: true,
+  languages: true,
+  tourInterests: true,
+  profileImageUrl: true,
+  profileCompleted: true,
+  isRegistrationComplete: true,
 });
 
 export const insertTransactionSchema = createInsertSchema(transactions).pick({
@@ -132,6 +174,7 @@ export const insertBookedPlanSchema = createInsertSchema(bookedPlans).pick({
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
+export type UpdateUserGuide = z.infer<typeof updateUserGuideSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;

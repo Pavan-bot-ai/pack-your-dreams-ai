@@ -1,4 +1,4 @@
-import { users, transactions, savedPlaces, hotelBookings, bookedPlans, type User, type InsertUser, type Transaction, type InsertTransaction, type SavedPlace, type InsertSavedPlace, type HotelBooking, type InsertHotelBooking, type BookedPlan, type InsertBookedPlan } from "@shared/schema";
+import { users, transactions, savedPlaces, hotelBookings, bookedPlans, type User, type InsertUser, type UpdateUserGuide, type Transaction, type InsertTransaction, type SavedPlace, type InsertSavedPlace, type HotelBooking, type InsertHotelBooking, type BookedPlan, type InsertBookedPlan } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 
@@ -8,8 +8,10 @@ import { eq, and } from "drizzle-orm";
 export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   getUserBySessionToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUserGuideProfile(id: number, guideData: UpdateUserGuide): Promise<User | undefined>;
   updateUserSession(id: number, sessionToken: string, expiryDate: Date): Promise<User | undefined>;
   updateUserLanguage(id: number, language: string): Promise<User | undefined>;
   updateUserActivity(id: number): Promise<void>;
@@ -39,6 +41,23 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user || undefined;
+  }
+
+  async updateUserGuideProfile(id: number, guideData: UpdateUserGuide): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ 
+        ...guideData,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id))
+      .returning();
     return user || undefined;
   }
 

@@ -27,7 +27,172 @@ const authenticateToken = async (req: any, res: any, next: any) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Authentication routes
+  // Helper function to generate session token
+  const generateSessionToken = (): string => {
+    return crypto.randomBytes(32).toString('hex');
+  };
+
+  // New unified authentication routes
+  app.post("/api/auth/signup", async (req, res) => {
+    try {
+      const { name, email, password, role = "user" } = req.body;
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ error: "User with this email already exists" });
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+      
+      // Create username from email
+      const username = email.split('@')[0];
+      
+      // Create user
+      const user = await storage.createUser({ 
+        username,
+        email, 
+        password: hashedPassword,
+        name,
+        role,
+        isRegistrationComplete: role === "user" // Users complete registration immediately, guides need more steps
+      });
+      
+      // Generate session token
+      const sessionToken = generateSessionToken();
+      const expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+      
+      await storage.updateUserSession(user.id, sessionToken, expiryDate);
+      
+      res.json({ 
+        token: sessionToken, 
+        user: { 
+          id: user.id, 
+          username: user.username,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          isRegistrationComplete: user.isRegistrationComplete,
+          language: user.language 
+        } 
+      });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/auth/signin", async (req, res) => {
+    try {
+      const { email, password, role } = req.body;
+      
+      // Find user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+
+      // Check role mismatch
+      if (user.role !== role) {
+        return res.status(401).json({ 
+          error: `This account is registered as a ${user.role === "guide" ? "Local Guide" : "User"}. Please switch the toggle.` 
+        });
+      }
+
+      // Verify password
+      const isValidPassword = await bcrypt.compare(password, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ error: "Invalid email or password" });
+      }
+
+      // Generate session token
+      const sessionToken = generateSessionToken();
+      const expiryDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+      
+      await storage.updateUserSession(user.id, sessionToken, expiryDate);
+      
+      res.json({ 
+        token: sessionToken, 
+        user: { 
+          id: user.id, 
+          username: user.username,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          isRegistrationComplete: user.isRegistrationComplete,
+          language: user.language 
+        } 
+      });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/auth/me", authenticateToken, async (req: any, res) => {
+    res.json(req.user);
+  });
+
+  app.post("/api/auth/logout", authenticateToken, async (req: any, res) => {
+    try {
+      await storage.clearUserSession(req.user.id);
+      res.json({ message: "Logged out successfully" });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Guide profile completion route
+  app.post("/api/auth/complete-guide-profile", authenticateToken, async (req: any, res) => {
+    try {
+      const guideData = req.body;
+      
+      // Ensure the user is a guide
+      if (req.user.role !== "guide") {
+        return res.status(403).json({ error: "Only guides can complete guide profiles" });
+      }
+
+      const updatedUser = await storage.updateUserGuideProfile(req.user.id, {
+        ...guideData,
+        profileCompleted: true,
+        isRegistrationComplete: true
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json({
+        user: {
+          id: updatedUser.id,
+          username: updatedUser.username,
+          email: updatedUser.email,
+          name: updatedUser.name,
+          role: updatedUser.role,
+          isRegistrationComplete: updatedUser.isRegistrationComplete,
+          profileCompleted: updatedUser.profileCompleted,
+          language: updatedUser.language,
+          // Include guide-specific fields
+          bio: updatedUser.bio,
+          phone: updatedUser.phone,
+          experience: updatedUser.experience,
+          certification: updatedUser.certification,
+          hourlyRate: updatedUser.hourlyRate,
+          serviceAreas: updatedUser.serviceAreas,
+          languages: updatedUser.languages,
+          tourInterests: updatedUser.tourInterests,
+          profileImageUrl: updatedUser.profileImageUrl,
+          rating: updatedUser.rating,
+          totalReviews: updatedUser.totalReviews,
+          totalEarnings: updatedUser.totalEarnings,
+          completedTours: updatedUser.completedTours
+        }
+      });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  // Original authentication routes (legacy support)
   app.post("/api/auth/register", async (req, res) => {
     try {
       const { username, password } = insertUserSchema.parse(req.body);

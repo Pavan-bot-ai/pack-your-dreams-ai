@@ -31,19 +31,8 @@ const AuthPageModal = ({ isOpen, onClose, onAuthSuccess, onGuideRegistration }: 
   const [signupPassword, setSignupPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // Get users from localStorage
-  const getStoredUsers = () => {
-    const users = localStorage.getItem("travelApp_users");
-    return users ? JSON.parse(users) : [];
-  };
-
-  // Save users to localStorage
-  const saveUsers = (users: any[]) => {
-    localStorage.setItem("travelApp_users", JSON.stringify(users));
-  };
-
   // Handle login
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!loginEmail || !loginPassword) {
       toast({
         title: "Error",
@@ -53,40 +42,51 @@ const AuthPageModal = ({ isOpen, onClose, onAuthSuccess, onGuideRegistration }: 
       return;
     }
 
-    const users = getStoredUsers();
-    const user = users.find((u: any) => u.email === loginEmail && u.password === loginPassword);
+    try {
+      const response = await fetch("/api/auth/signin", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: loginEmail,
+          password: loginPassword,
+          role: isGuideMode ? "guide" : "user",
+        }),
+      });
 
-    if (!user) {
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast({
+          title: "Error",
+          description: data.error || "Login failed",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Store session token
+      localStorage.setItem("travelApp_token", data.token);
+      localStorage.setItem("travelApp_currentUser", JSON.stringify(data.user));
+
+      toast({
+        title: "Success",
+        description: "Logged in successfully!",
+      });
+
+      onAuthSuccess(data.user);
+    } catch (error) {
       toast({
         title: "Error",
-        description: "Invalid email or password",
+        description: "Network error. Please try again.",
         variant: "destructive",
       });
-      return;
     }
-
-    // Check role mismatch
-    if ((isGuideMode && user.role !== "guide") || (!isGuideMode && user.role === "guide")) {
-      toast({
-        title: "Role Mismatch",
-        description: `This account is registered as a ${user.role === "guide" ? "Local Guide" : "User"}. Please switch the toggle.`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "Success",
-      description: "Logged in successfully!",
-    });
-
-    // Set current user in localStorage
-    localStorage.setItem("travelApp_currentUser", JSON.stringify(user));
-    onAuthSuccess(user);
   };
 
   // Handle signup
-  const handleSignup = () => {
+  const handleSignup = async () => {
     if (!signupName || !signupEmail || !signupPassword || !confirmPassword) {
       toast({
         title: "Error",
@@ -114,45 +114,53 @@ const AuthPageModal = ({ isOpen, onClose, onAuthSuccess, onGuideRegistration }: 
       return;
     }
 
-    const users = getStoredUsers();
-    
-    // Check if email already exists
-    if (users.find((u: any) => u.email === signupEmail)) {
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: signupName,
+          email: signupEmail,
+          password: signupPassword,
+          role: isGuideMode ? "guide" : "user",
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        toast({
+          title: "Error",
+          description: data.error || "Signup failed",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Store session token
+      localStorage.setItem("travelApp_token", data.token);
+      localStorage.setItem("travelApp_currentUser", JSON.stringify(data.user));
+
+      toast({
+        title: "Success",
+        description: "Account created successfully!",
+      });
+
+      if (isGuideMode) {
+        // Redirect to guide registration for additional details
+        onGuideRegistration();
+      } else {
+        // Redirect to user dashboard
+        onAuthSuccess(data.user);
+      }
+    } catch (error) {
       toast({
         title: "Error",
-        description: "An account with this email already exists",
+        description: "Network error. Please try again.",
         variant: "destructive",
       });
-      return;
-    }
-
-    const newUser = {
-      id: Date.now(),
-      name: signupName,
-      email: signupEmail,
-      password: signupPassword,
-      role: isGuideMode ? "guide" : "user",
-      createdAt: new Date().toISOString(),
-      isRegistrationComplete: !isGuideMode, // User registration is complete, guide needs more details
-    };
-
-    users.push(newUser);
-    saveUsers(users);
-
-    toast({
-      title: "Success",
-      description: "Account created successfully!",
-    });
-
-    // Set current user in localStorage
-    localStorage.setItem("travelApp_currentUser", JSON.stringify(newUser));
-
-    if (isGuideMode) {
-      // Redirect to guide registration for additional details
-      onGuideRegistration();
-    } else {
-      // Redirect to user dashboard
-      onAuthSuccess(newUser);
     }
   };
 

@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 
 interface GuideRegistrationProps {
   onRegistrationComplete: (guide: any) => void;
+  onBack?: () => void;
 }
 
 const serviceAreas = [
@@ -33,7 +34,7 @@ const tourInterests = [
   "Beaches & Coastal", "Mountain Adventures", "City Walking Tours", "Bike Tours", "Boat Trips"
 ];
 
-const GuideRegistration = ({ onRegistrationComplete }: GuideRegistrationProps) => {
+const GuideRegistration = ({ onRegistrationComplete, onBack }: GuideRegistrationProps) => {
   const [bio, setBio] = useState("");
   const [phone, setPhone] = useState("");
   const [experience, setExperience] = useState("");
@@ -51,17 +52,6 @@ const GuideRegistration = ({ onRegistrationComplete }: GuideRegistrationProps) =
   const getCurrentUser = () => {
     const currentUser = localStorage.getItem("travelApp_currentUser");
     return currentUser ? JSON.parse(currentUser) : null;
-  };
-
-  // Update user in localStorage
-  const updateUser = (updatedUser: any) => {
-    const users = JSON.parse(localStorage.getItem("travelApp_users") || "[]");
-    const userIndex = users.findIndex((u: any) => u.id === updatedUser.id);
-    if (userIndex !== -1) {
-      users[userIndex] = updatedUser;
-      localStorage.setItem("travelApp_users", JSON.stringify(users));
-      localStorage.setItem("travelApp_currentUser", JSON.stringify(updatedUser));
-    }
   };
 
   const handleAreaSelect = (area: string) => {
@@ -97,7 +87,7 @@ const GuideRegistration = ({ onRegistrationComplete }: GuideRegistrationProps) =
     setSelectedInterests(selectedInterests.filter(i => i !== interest));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!bio || !phone || !experience || selectedAreas.length === 0 || selectedLanguages.length === 0 || selectedInterests.length === 0) {
       toast({
         title: "Error",
@@ -117,32 +107,63 @@ const GuideRegistration = ({ onRegistrationComplete }: GuideRegistrationProps) =
       return;
     }
 
-    const updatedUser = {
-      ...currentUser,
-      bio,
-      phone,
-      experience,
-      certification,
-      hourlyRate: hourlyRate ? parseFloat(hourlyRate) : null,
-      serviceAreas: selectedAreas,
-      languages: selectedLanguages,
-      tourInterests: selectedInterests,
-      isRegistrationComplete: true,
-      profileCompleted: true,
-      rating: 0,
-      totalReviews: 0,
-      totalEarnings: 0,
-      completedTours: 0,
-    };
+    try {
+      const token = localStorage.getItem("travelApp_token");
+      if (!token) {
+        toast({
+          title: "Error",
+          description: "Session expired. Please log in again.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    updateUser(updatedUser);
+      const response = await fetch("/api/auth/complete-guide-profile", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          bio,
+          phone,
+          experience,
+          certification: certification || "Not specified",
+          hourlyRate: parseFloat(hourlyRate) || 50,
+          serviceAreas: selectedAreas,
+          languages: selectedLanguages,
+          tourInterests: selectedInterests,
+          profileImageUrl: "",
+        }),
+      });
 
-    toast({
-      title: "Success",
-      description: "Your Local Guide profile has been created successfully!",
-    });
+      const data = await response.json();
 
-    onRegistrationComplete(updatedUser);
+      if (!response.ok) {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to complete profile",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Update local storage with complete user data
+      localStorage.setItem("travelApp_currentUser", JSON.stringify(data.user));
+
+      toast({
+        title: "Success",
+        description: "Guide profile completed successfully!",
+      });
+
+      onRegistrationComplete(data.user);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Network error. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const filteredAreas = serviceAreas.filter(area => 
@@ -348,13 +369,26 @@ const GuideRegistration = ({ onRegistrationComplete }: GuideRegistrationProps) =
               </div>
             </div>
 
-            <Button
-              onClick={handleSubmit}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 py-3"
-              size="lg"
-            >
-              Complete Registration & Start Guiding
-            </Button>
+            {/* Action Buttons */}
+            <div className="flex gap-4">
+              {onBack && (
+                <Button
+                  onClick={onBack}
+                  variant="outline"
+                  className="flex-1 py-3"
+                  size="lg"
+                >
+                  Back
+                </Button>
+              )}
+              <Button
+                onClick={handleSubmit}
+                className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 py-3"
+                size="lg"
+              >
+                Complete Registration & Start Guiding
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
