@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,50 @@ const interestOptions = [
   { id: 'business', label: 'Business Trip', icon: '💼' }
 ];
 
+// Popular travel destinations for search suggestions
+const popularDestinations = [
+  "Paris, France", "London, England", "Tokyo, Japan", "New York, USA", "Rome, Italy",
+  "Barcelona, Spain", "Amsterdam, Netherlands", "Berlin, Germany", "Sydney, Australia",
+  "Bangkok, Thailand", "Dubai, UAE", "Singapore", "Istanbul, Turkey", "Prague, Czech Republic",
+  "Vienna, Austria", "Mumbai, India", "Cairo, Egypt", "Rio de Janeiro, Brazil", "Buenos Aires, Argentina",
+  "Mexico City, Mexico", "Toronto, Canada", "Seoul, South Korea", "Hong Kong", "Zurich, Switzerland",
+  "Stockholm, Sweden", "Copenhagen, Denmark", "Oslo, Norway", "Helsinki, Finland", "Reykjavik, Iceland",
+  "Dublin, Ireland", "Edinburgh, Scotland", "Madrid, Spain", "Lisbon, Portugal", "Athens, Greece",
+  "Budapest, Hungary", "Warsaw, Poland", "Moscow, Russia", "St. Petersburg, Russia", "Kiev, Ukraine",
+  "Bucharest, Romania", "Sofia, Bulgaria", "Zagreb, Croatia", "Belgrade, Serbia", "Ljubljana, Slovenia",
+  "Tallinn, Estonia", "Riga, Latvia", "Vilnius, Lithuania", "Minsk, Belarus", "Chisinau, Moldova",
+  "Tirana, Albania", "Skopje, North Macedonia", "Podgorica, Montenegro", "Sarajevo, Bosnia and Herzegovina",
+  "Pristina, Kosovo", "Bali, Indonesia", "Phuket, Thailand", "Goa, India", "Maldives", "Santorini, Greece",
+  "Mykonos, Greece", "Ibiza, Spain", "Mallorca, Spain", "Canary Islands, Spain", "Madeira, Portugal",
+  "Cyprus", "Malta", "Crete, Greece", "Sicily, Italy", "Sardinia, Italy", "Corsica, France",
+  "Hawaiian Islands, USA", "Fiji", "Tahiti", "Seychelles", "Mauritius", "Madagascar", "Zanzibar, Tanzania",
+  "Cape Town, South Africa", "Marrakech, Morocco", "Casablanca, Morocco", "Tunis, Tunisia", "Algiers, Algeria",
+  "Lagos, Nigeria", "Nairobi, Kenya", "Addis Ababa, Ethiopia", "Khartoum, Sudan", "Kampala, Uganda",
+  "Kigali, Rwanda", "Dar es Salaam, Tanzania", "Lusaka, Zambia", "Harare, Zimbabwe", "Gaborone, Botswana",
+  "Windhoek, Namibia", "Maputo, Mozambique", "Antananarivo, Madagascar", "Port Louis, Mauritius",
+  "Victoria, Seychelles", "Beijing, China", "Shanghai, China", "Guangzhou, China", "Shenzhen, China",
+  "Chengdu, China", "Xi'an, China", "Hangzhou, China", "Nanjing, China", "Wuhan, China", "Tianjin, China",
+  "Manila, Philippines", "Cebu, Philippines", "Davao, Philippines", "Jakarta, Indonesia", "Surabaya, Indonesia",
+  "Bandung, Indonesia", "Medan, Indonesia", "Semarang, Indonesia", "Palembang, Indonesia", "Makassar, Indonesia",
+  "Kuala Lumpur, Malaysia", "George Town, Malaysia", "Johor Bahru, Malaysia", "Ipoh, Malaysia", "Kota Kinabalu, Malaysia",
+  "Brunei", "Phnom Penh, Cambodia", "Siem Reap, Cambodia", "Vientiane, Laos", "Yangon, Myanmar", "Naypyidaw, Myanmar",
+  "Hanoi, Vietnam", "Ho Chi Minh City, Vietnam", "Da Nang, Vietnam", "Nha Trang, Vietnam", "Hoi An, Vietnam",
+  "Colombo, Sri Lanka", "Kandy, Sri Lanka", "Galle, Sri Lanka", "Kathmandu, Nepal", "Pokhara, Nepal",
+  "Thimphu, Bhutan", "Paro, Bhutan", "Male, Maldives", "Dhaka, Bangladesh", "Chittagong, Bangladesh",
+  "Sylhet, Bangladesh", "Rajshahi, Bangladesh", "Khulna, Bangladesh", "Barisal, Bangladesh", "Rangpur, Bangladesh",
+  "Islamabad, Pakistan", "Karachi, Pakistan", "Lahore, Pakistan", "Faisalabad, Pakistan", "Rawalpindi, Pakistan",
+  "Multan, Pakistan", "Hyderabad, Pakistan", "Gujranwala, Pakistan", "Peshawar, Pakistan", "Quetta, Pakistan",
+  "Kabul, Afghanistan", "Kandahar, Afghanistan", "Herat, Afghanistan", "Mazar-i-Sharif, Afghanistan", "Jalalabad, Afghanistan",
+  "Tehran, Iran", "Mashhad, Iran", "Isfahan, Iran", "Karaj, Iran", "Shiraz, Iran", "Tabriz, Iran", "Qom, Iran",
+  "Ahvaz, Iran", "Kermanshah, Iran", "Urmia, Iran", "Rasht, Iran", "Zahedan, Iran", "Hamedan, Iran", "Yazd, Iran",
+  "Arak, Iran", "Ardabil, Iran", "Bandar Abbas, Iran", "Kerman, Iran", "Zanjan, Iran", "Sanandaj, Iran",
+  "Khorramabad, Iran", "Gorgan, Iran", "Sari, Iran", "Dezful, Iran", "Kashan, Iran", "Ilam, Iran", "Bushehr, Iran",
+  "Qazvin, Iran", "Semnan, Iran", "Yasuj, Iran", "Birjand, Iran", "Jiroft, Iran", "Bam, Iran", "Minab, Iran",
+  "Sirjan, Iran", "Saveh, Iran", "Mahabad, Iran", "Marand, Iran", "Abhar, Iran", "Khoy, Iran", "Maragheh, Iran",
+  "Miandoab, Iran", "Shabestar, Iran", "Salmas, Iran", "Naghadeh, Iran", "Piranshahr, Iran", "Sardasht, Iran",
+  "Chaldoran, Iran", "Showt, Iran", "Poldasht, Iran", "Maku, Iran", "Khoda Afarin, Iran", "Julfa, Iran"
+];
+
 const SmartTripPlanner = ({ isOpen, onClose, defaultDestination, defaultPlan }: SmartTripPlannerProps) => {
   const [destination, setDestination] = useState(defaultDestination || '');
   const [startDate, setStartDate] = useState<Date>();
@@ -41,8 +85,45 @@ const SmartTripPlanner = ({ isOpen, onClose, defaultDestination, defaultPlan }: 
   const [selectedInterest, setSelectedInterest] = useState('');
   const [showStartCalendar, setShowStartCalendar] = useState(false);
   const [showEndCalendar, setShowEndCalendar] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionRef = useRef<HTMLDivElement>(null);
 
   const isFormComplete = destination && startDate && endDate && travelers && budget && selectedInterest;
+
+  // Handle destination search suggestions
+  const handleDestinationChange = (value: string) => {
+    setDestination(value);
+    
+    if (value.length > 0) {
+      const filteredSuggestions = popularDestinations
+        .filter(dest => dest.toLowerCase().includes(value.toLowerCase()))
+        .slice(0, 5); // Show max 5 suggestions
+      setSuggestions(filteredSuggestions);
+      setShowSuggestions(filteredSuggestions.length > 0);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setDestination(suggestion);
+    setSuggestions([]);
+    setShowSuggestions(false);
+  };
+
+  // Close suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (suggestionRef.current && !suggestionRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleGenerateAIPlan = () => {
     if (!isFormComplete) return;
@@ -102,15 +183,36 @@ const SmartTripPlanner = ({ isOpen, onClose, defaultDestination, defaultPlan }: 
           {/* Destination */}
           <div className="space-y-2">
             <Label htmlFor="destination" className="text-sm font-medium">Destination *</Label>
-            <div className="relative">
-              <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <div className="relative" ref={suggestionRef}>
+              <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10" />
               <Input
                 id="destination"
                 placeholder="Where do you want to go?"
                 className="pl-10"
                 value={destination}
-                onChange={(e) => setDestination(e.target.value)}
+                onChange={(e) => handleDestinationChange(e.target.value)}
+                onFocus={() => {
+                  if (destination.length > 0 && suggestions.length > 0) {
+                    setShowSuggestions(true);
+                  }
+                }}
               />
+              
+              {/* Search Suggestions Dropdown */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-md shadow-lg mt-1 max-h-48 overflow-y-auto z-50">
+                  {suggestions.map((suggestion, index) => (
+                    <div
+                      key={index}
+                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm flex items-center gap-2"
+                      onClick={() => handleSuggestionClick(suggestion)}
+                    >
+                      <MapPin className="h-4 w-4 text-gray-400" />
+                      <span>{suggestion}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
