@@ -3,7 +3,9 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcrypt";
 import crypto from "crypto";
-import { insertUserSchema, insertTransactionSchema, insertSavedPlaceSchema, insertHotelBookingSchema, insertBookedPlanSchema } from "@shared/schema";
+import { insertUserSchema, insertTransactionSchema, insertSavedPlaceSchema, insertHotelBookingSchema, insertBookedPlanSchema, insertGuideBookingSchema, insertGuideMessageSchema, insertGuideNotificationSchema } from "@shared/schema";
+import { WebSocketServer } from 'ws';
+import WebSocket from 'ws';
 
 // Authentication middleware
 const authenticateToken = async (req: any, res: any, next: any) => {
@@ -655,7 +657,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Guide booking routes
+  app.get("/api/guides/available", authenticateToken, async (req, res) => {
+    try {
+      const guides = await storage.getAvailableGuides();
+      res.json(guides);
+    } catch (error) {
+      console.error("Error fetching available guides:", error);
+      res.status(500).json({ error: "Failed to fetch guides" });
+    }
+  });
+
+  app.post("/api/guide-bookings", authenticateToken, async (req, res) => {
+    try {
+      const result = insertGuideBookingSchema.safeParse({
+        ...req.body,
+        userId: req.user.id
+      });
+
+      if (!result.success) {
+        return res.status(400).json({ error: result.error.message });
+      }
+
+      const booking = await storage.createGuideBooking(result.data);
+      
+      // Create notification for the guide
+      await storage.createGuideNotification({
+        userId: result.data.guideId,
+        type: 'booking_request',
+        title: 'New Booking Request',
+        message: `New booking request for ${result.data.destination}`,
+        relatedId: booking.id
+      });
+
+      res.json(booking);
+    } catch (error) {
+      console.error("Error creating guide booking:", error);
+      res.status(500).json({ error: "Failed to create booking" });
+    }
+  });
+
+  app.get("/api/guide-bookings/user", authenticateToken, async (req, res) => {
+    try {
+      const bookings = await storage.getGuideBookingsByUser(req.user.id);
+      res.json(bookings);
+    } catch (error) {
+      console.error("Error fetching user bookings:", error);
+      res.status(500).json({ error: "Failed to fetch bookings" });
+    }
+  });
+
+  app.get("/api/guide-bookings/:id", authenticateToken, async (req, res) => {
+    try {
+      const booking = await storage.getGuideBookingById(parseInt(req.params.id));
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      res.json(booking);
+    } catch (error) {
+      console.error("Error fetching booking:", error);
+      res.status(500).json({ error: "Failed to fetch booking" });
+    }
+  });
+
+  app.get("/api/guide-bookings/:id/messages", authenticateToken, async (req, res) => {
+    try {
+      const messages = await storage.getMessagesByBooking(parseInt(req.params.id));
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching messages:", error);
+      res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
+  app.post("/api/guide-bookings/:id/messages", authenticateToken, async (req, res) => {
+    try {
+      const result = insertGuideMessageSchema.safeParse({
+        ...req.body,
+        bookingId: parseInt(req.params.id),
+        senderId: req.user.id,
+        senderType: req.user.role || 'user'
+      });
+
+      if (!result.success) {
+        return res.status(400).json({ error: result.error.message });
+      }
+
+      const message = await storage.createGuideMessage(result.data);
+      res.json(message);
+    } catch (error) {
+      console.error("Error creating message:", error);
+      res.status(500).json({ error: "Failed to send message" });
+    }
+  });
+
   const httpServer = createServer(app);
+
+  // WebSocket server for real-time messaging
+  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+
+  wss.on('connection', (ws: WebSocket) => {
+    console.log('New WebSocket connection');
+    
+    ws.on('message', (data: Buffer) => {
+      try {
+        const message = JSON.parse(data.toString());
+        
+        if (message.type === 'join_booking') {
+          // Associate this connection with a booking
+          (ws as any).bookingId = message.bookingId;
+          (ws as any).userId = message.userId;
+        } else if (message.type === 'new_message') {
+          // Broadcast to all clients in this booking room
+          wss.clients.forEach((client: WebSocket) => {
+            if (client !== ws && 
+                client.readyState === WebSocket.OPEN && 
+                (client as any).bookingId === message.bookingId) {
+              client.send(JSON.stringify(message));
+            }
+          });
+        }
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+      }
+    });
+
+    ws.on('close', () => {
+      console.log('WebSocket connection closed');
+    });
+  });
 
   return httpServer;
 }

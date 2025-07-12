@@ -1,9 +1,9 @@
 
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
 
 export const useAppState = () => {
-  const { isAuthenticated, logout } = useAuth();
+  // Check authentication from localStorage to avoid context errors
+  const isAuthenticated = !!localStorage.getItem('travelApp_token');
   const [showAuth, setShowAuth] = useState(false);
   const [showLocalGuide, setShowLocalGuide] = useState(false);
   const [showTripPlanner, setShowTripPlanner] = useState(false);
@@ -13,6 +13,7 @@ export const useAppState = () => {
   const [showTransactions, setShowTransactions] = useState(false);
   const [showPlaceDetails, setShowPlaceDetails] = useState(false);
   const [selectedPlaceForDetails, setSelectedPlaceForDetails] = useState<string>('');
+  const [showGuideBooking, setShowGuideBooking] = useState(false);
 
   const handleFeatureClick = (feature: string) => {
     if (!isAuthenticated) {
@@ -25,7 +26,7 @@ export const useAppState = () => {
         setShowTripPlanner(true);
         break;
       case 'local-guide':
-        setShowLocalGuide(true);
+        setShowGuideBooking(true);
         break;
       case 'translator':
         setShowTranslator(true);
@@ -137,6 +138,7 @@ export const useAppState = () => {
     showTransactions,
     showPlaceDetails,
     selectedPlaceForDetails,
+    showGuideBooking,
     
     // State setters
     setShowAuth,
@@ -147,6 +149,7 @@ export const useAppState = () => {
     setShowTransactions,
     setShowPlaceDetails,
     setSelectedDestination,
+    setShowGuideBooking,
     
     // Event handlers
     handleFeatureClick,

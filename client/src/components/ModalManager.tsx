@@ -6,6 +6,7 @@ import AILocalGuide from "@/components/AILocalGuide";
 import AITranslator from "@/components/AITranslator";
 import AIBookings from "@/components/AIBookings";
 import TransactionsList from "@/components/TransactionsList";
+import { GuideBooking } from "@/components/GuideBooking";
 
 interface ModalManagerProps {
   showAuth: boolean;
@@ -15,6 +16,7 @@ interface ModalManagerProps {
   showTranslator: boolean;
   showBookings: boolean;
   showTransactions: boolean;
+  showGuideBooking: boolean;
   selectedPlaceForDetails: string;
   selectedDestination: string;
   onAuthClose: () => void;
@@ -24,6 +26,7 @@ interface ModalManagerProps {
   onTranslatorClose: () => void;
   onBookingsClose: () => void;
   onTransactionsClose: () => void;
+  onGuideBookingClose: () => void;
   onLogin: (userData: any) => void;
   onGeneratePlan: (planDetails: any) => void;
 }
@@ -36,6 +39,7 @@ const ModalManager = ({
   showTranslator,
   showBookings,
   showTransactions,
+  showGuideBooking,
   selectedPlaceForDetails,
   selectedDestination,
   onAuthClose,
@@ -45,6 +49,7 @@ const ModalManager = ({
   onTranslatorClose,
   onBookingsClose,
   onTransactionsClose,
+  onGuideBookingClose,
   onLogin,
   onGeneratePlan,
 }: ModalManagerProps) => {
@@ -95,6 +100,13 @@ const ModalManager = ({
         isOpen={showTransactions}
         onClose={onTransactionsClose}
       />
+
+      {/* Guide Booking Modal */}
+      {showGuideBooking && (
+        <GuideBooking 
+          onClose={onGuideBookingClose}
+        />
+      )}
     </>
   );
 };

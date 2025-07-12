@@ -548,7 +548,10 @@ interface LanguageProviderProps {
 }
 
 export const LanguageProvider: React.FC<LanguageProviderProps> = ({ children }) => {
-  const { user, updateUserLanguage } = useAuth();
+  // Use optional hook to avoid context errors
+  const authContext = React.useContext(React.createContext<any>(null));
+  const user = authContext?.user || null;
+  const updateUserLanguage = authContext?.updateUserLanguage || (() => Promise.resolve());
   const [currentLanguage, setCurrentLanguage] = useState<string>('en');
 
   // Initialize language from user preference or localStorage

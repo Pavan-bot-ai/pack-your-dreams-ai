@@ -376,3 +376,80 @@ export type InsertAdminFeedback = z.infer<typeof insertAdminFeedbackSchema>;
 export type AdminFeedback = typeof adminFeedback.$inferSelect;
 export type InsertAdminAiUsage = z.infer<typeof insertAdminAiUsageSchema>;
 export type AdminAiUsage = typeof adminAiUsage.$inferSelect;
+
+// Guide booking and messaging tables
+export const guideBookings = pgTable("guide_bookings", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  guideId: integer("guide_id").notNull(),
+  destination: text("destination").notNull(),
+  date: text("date").notNull(),
+  time: text("time").notNull(),
+  duration: text("duration").notNull(),
+  travelers: integer("travelers").notNull(),
+  budget: text("budget").notNull(),
+  specialRequests: text("special_requests"),
+  status: text("status").default("pending"), // pending, accepted, rejected, completed
+  totalAmount: decimal("total_amount", { precision: 10, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const guideMessages = pgTable("guide_messages", {
+  id: serial("id").primaryKey(),
+  bookingId: integer("booking_id").notNull(),
+  senderId: integer("sender_id").notNull(),
+  senderType: text("sender_type").notNull(), // 'user' or 'guide'
+  message: text("message").notNull(),
+  messageType: text("message_type").default("text"), // text, image, location
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const guideNotifications = pgTable("guide_notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  type: text("type").notNull(), // booking_request, booking_accepted, booking_rejected, new_message
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  relatedId: integer("related_id"), // booking_id or message_id
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Guide booking and messaging schemas
+export const insertGuideBookingSchema = createInsertSchema(guideBookings).pick({
+  userId: true,
+  guideId: true,
+  destination: true,
+  date: true,
+  time: true,
+  duration: true,
+  travelers: true,
+  budget: true,
+  specialRequests: true,
+  totalAmount: true,
+});
+
+export const insertGuideMessageSchema = createInsertSchema(guideMessages).pick({
+  bookingId: true,
+  senderId: true,
+  senderType: true,
+  message: true,
+  messageType: true,
+});
+
+export const insertGuideNotificationSchema = createInsertSchema(guideNotifications).pick({
+  userId: true,
+  type: true,
+  title: true,
+  message: true,
+  relatedId: true,
+});
+
+export type InsertGuideBooking = z.infer<typeof insertGuideBookingSchema>;
+export type GuideBooking = typeof guideBookings.$inferSelect;
+export type InsertGuideMessage = z.infer<typeof insertGuideMessageSchema>;
+export type GuideMessage = typeof guideMessages.$inferSelect;
+export type InsertGuideNotification = z.infer<typeof insertGuideNotificationSchema>;
+export type GuideNotification = typeof guideNotifications.$inferSelect;

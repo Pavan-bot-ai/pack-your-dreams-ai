@@ -25,6 +25,7 @@ const Index = ({ onLoginClick, currentUser, onLogout }: IndexProps = {}) => {
     showTransactions,
     showPlaceDetails,
     selectedPlaceForDetails,
+    showGuideBooking,
     
     // State setters
     setShowAuth,
@@ -35,6 +36,7 @@ const Index = ({ onLoginClick, currentUser, onLogout }: IndexProps = {}) => {
     setShowTransactions,
     setShowPlaceDetails,
     setSelectedDestination,
+    setShowGuideBooking,
     
     // Event handlers
     handleFeatureClick,
@@ -72,6 +74,7 @@ const Index = ({ onLoginClick, currentUser, onLogout }: IndexProps = {}) => {
         showTranslator={showTranslator}
         showBookings={showBookings}
         showTransactions={showTransactions}
+        showGuideBooking={showGuideBooking}
         selectedPlaceForDetails={selectedPlaceForDetails}
         selectedDestination={selectedDestination}
         onAuthClose={() => setShowAuth(false)}
@@ -84,6 +87,7 @@ const Index = ({ onLoginClick, currentUser, onLogout }: IndexProps = {}) => {
         onTranslatorClose={() => setShowTranslator(false)}
         onBookingsClose={() => setShowBookings(false)}
         onTransactionsClose={() => setShowTransactions(false)}
+        onGuideBookingClose={() => setShowGuideBooking(false)}
         onLogin={handleLogin}
         onGeneratePlan={handleGeneratePlanFromDetails}
       />

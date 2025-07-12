@@ -1,4 +1,51 @@
-import { users, transactions, savedPlaces, hotelBookings, bookedPlans, tourRequests, guideTours, tourIdeas, guideTransactions, adminAnalytics, adminFeedback, adminAiUsage, type User, type InsertUser, type UpdateUserGuide, type Transaction, type InsertTransaction, type SavedPlace, type InsertSavedPlace, type HotelBooking, type InsertHotelBooking, type BookedPlan, type InsertBookedPlan, type TourRequest, type InsertTourRequest, type GuideTour, type InsertGuideTour, type TourIdea, type InsertTourIdea, type GuideTransaction, type InsertGuideTransaction, type AdminAnalytics, type InsertAdminAnalytics, type AdminFeedback, type InsertAdminFeedback, type AdminAiUsage, type InsertAdminAiUsage } from "@shared/schema";
+import { 
+  users, 
+  transactions, 
+  savedPlaces, 
+  hotelBookings, 
+  bookedPlans, 
+  tourRequests, 
+  guideTours, 
+  tourIdeas, 
+  guideTransactions, 
+  adminAnalytics, 
+  adminFeedback, 
+  adminAiUsage,
+  guideBookings,
+  guideMessages,
+  guideNotifications,
+  type User, 
+  type InsertUser, 
+  type UpdateUserGuide, 
+  type Transaction, 
+  type InsertTransaction, 
+  type SavedPlace, 
+  type InsertSavedPlace, 
+  type HotelBooking, 
+  type InsertHotelBooking, 
+  type BookedPlan, 
+  type InsertBookedPlan, 
+  type TourRequest, 
+  type InsertTourRequest, 
+  type GuideTour, 
+  type InsertGuideTour, 
+  type TourIdea, 
+  type InsertTourIdea, 
+  type GuideTransaction, 
+  type InsertGuideTransaction, 
+  type AdminAnalytics, 
+  type InsertAdminAnalytics, 
+  type AdminFeedback, 
+  type InsertAdminFeedback, 
+  type AdminAiUsage, 
+  type InsertAdminAiUsage,
+  type GuideBooking,
+  type InsertGuideBooking,
+  type GuideMessage,
+  type InsertGuideMessage,
+  type GuideNotification,
+  type InsertGuideNotification
+} from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 
@@ -60,6 +107,22 @@ export interface IStorage {
   getAdminAiUsage(): Promise<AdminAiUsage[]>;
   getTourRequestsForAdmin(): Promise<TourRequest[]>;
   getGuideToursForAdmin(): Promise<GuideTour[]>;
+  
+  // Guide booking and messaging methods
+  createGuideBooking(booking: InsertGuideBooking): Promise<GuideBooking>;
+  getGuideBookingsByUser(userId: number): Promise<GuideBooking[]>;
+  getGuideBookingsByGuide(guideId: number): Promise<GuideBooking[]>;
+  updateGuideBookingStatus(id: number, status: string): Promise<GuideBooking | undefined>;
+  getGuideBookingById(id: number): Promise<GuideBooking | undefined>;
+  
+  createGuideMessage(message: InsertGuideMessage): Promise<GuideMessage>;
+  getMessagesByBooking(bookingId: number): Promise<GuideMessage[]>;
+  markMessagesAsRead(bookingId: number, userId: number): Promise<void>;
+  
+  createGuideNotification(notification: InsertGuideNotification): Promise<GuideNotification>;
+  getNotificationsByUser(userId: number): Promise<GuideNotification[]>;
+  markNotificationAsRead(id: number): Promise<void>;
+  getAvailableGuides(): Promise<User[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -434,6 +497,84 @@ export class DatabaseStorage implements IStorage {
 
   async getGuideToursForAdmin(): Promise<GuideTour[]> {
     return await db.select().from(guideTours).orderBy(guideTours.createdAt);
+  }
+
+  // Guide booking and messaging methods implementation
+  async createGuideBooking(insertBooking: InsertGuideBooking): Promise<GuideBooking> {
+    const [booking] = await db
+      .insert(guideBookings)
+      .values(insertBooking)
+      .returning();
+    return booking;
+  }
+
+  async getGuideBookingsByUser(userId: number): Promise<GuideBooking[]> {
+    return await db.select().from(guideBookings).where(eq(guideBookings.userId, userId));
+  }
+
+  async getGuideBookingsByGuide(guideId: number): Promise<GuideBooking[]> {
+    return await db.select().from(guideBookings).where(eq(guideBookings.guideId, guideId));
+  }
+
+  async updateGuideBookingStatus(id: number, status: string): Promise<GuideBooking | undefined> {
+    const [booking] = await db
+      .update(guideBookings)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(guideBookings.id, id))
+      .returning();
+    return booking || undefined;
+  }
+
+  async getGuideBookingById(id: number): Promise<GuideBooking | undefined> {
+    const [booking] = await db.select().from(guideBookings).where(eq(guideBookings.id, id));
+    return booking || undefined;
+  }
+
+  async createGuideMessage(insertMessage: InsertGuideMessage): Promise<GuideMessage> {
+    const [message] = await db
+      .insert(guideMessages)
+      .values(insertMessage)
+      .returning();
+    return message;
+  }
+
+  async getMessagesByBooking(bookingId: number): Promise<GuideMessage[]> {
+    return await db.select().from(guideMessages).where(eq(guideMessages.bookingId, bookingId));
+  }
+
+  async markMessagesAsRead(bookingId: number, userId: number): Promise<void> {
+    await db
+      .update(guideMessages)
+      .set({ isRead: true })
+      .where(
+        and(
+          eq(guideMessages.bookingId, bookingId),
+          eq(guideMessages.senderId, userId)
+        )
+      );
+  }
+
+  async createGuideNotification(insertNotification: InsertGuideNotification): Promise<GuideNotification> {
+    const [notification] = await db
+      .insert(guideNotifications)
+      .values(insertNotification)
+      .returning();
+    return notification;
+  }
+
+  async getNotificationsByUser(userId: number): Promise<GuideNotification[]> {
+    return await db.select().from(guideNotifications).where(eq(guideNotifications.userId, userId));
+  }
+
+  async markNotificationAsRead(id: number): Promise<void> {
+    await db
+      .update(guideNotifications)
+      .set({ isRead: true })
+      .where(eq(guideNotifications.id, id));
+  }
+
+  async getAvailableGuides(): Promise<User[]> {
+    return await db.select().from(users).where(eq(users.role, 'guide'));
   }
 }
 
