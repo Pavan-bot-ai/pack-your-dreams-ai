@@ -66,12 +66,9 @@ export function GuideMessaging({
   // Send message mutation
   const sendMessageMutation = useMutation({
     mutationFn: (messageData: { message: string }) => 
-      apiRequest(`/api/guide-bookings/${bookingId}/messages`, {
-        method: 'POST',
-        body: JSON.stringify({
-          message: messageData.message,
-          messageType: 'text'
-        })
+      apiRequest('POST', `/api/guide-bookings/${bookingId}/messages`, {
+        message: messageData.message,
+        messageType: 'text'
       }),
     onSuccess: () => {
       setNewMessage("");

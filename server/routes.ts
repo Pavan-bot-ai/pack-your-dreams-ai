@@ -717,6 +717,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.patch("/api/guide-bookings/:id", authenticateToken, async (req, res) => {
+    try {
+      const booking = await storage.updateGuideBookingStatus(parseInt(req.params.id), req.body.status);
+      if (!booking) {
+        return res.status(404).json({ error: "Booking not found" });
+      }
+      res.json(booking);
+    } catch (error) {
+      console.error("Error updating booking status:", error);
+      res.status(500).json({ error: "Failed to update booking" });
+    }
+  });
+
   app.get("/api/guide-bookings/:id", authenticateToken, async (req, res) => {
     try {
       const booking = await storage.getGuideBookingById(parseInt(req.params.id));

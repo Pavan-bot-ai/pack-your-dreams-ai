@@ -31,7 +31,7 @@ import {
   Phone
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 
 interface GuideDashboardProps {
@@ -55,6 +55,7 @@ const GuideDashboard = ({ user, onLogout }: GuideDashboardProps) => {
     nextTour: null
   });
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // Fetch guide booking requests
   const { data: guideBookings = [], isLoading: bookingsLoading } = useQuery({
@@ -149,15 +150,25 @@ const GuideDashboard = ({ user, onLogout }: GuideDashboardProps) => {
     }));
   };
 
-  const handleRequestAction = (requestId: number, action: string) => {
-    setNewRequests(prev => prev.map(req => 
-      req.id === requestId ? { ...req, status: action } : req
-    ));
-    
-    toast({
-      title: "Success",
-      description: `Tour request ${action}ed successfully!`,
-    });
+  const handleRequestAction = async (requestId: number, action: string) => {
+    try {
+      // Update booking status via API
+      await apiRequest('PATCH', `/api/guide-bookings/${requestId}`, { status: action });
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/guide-bookings/guide'] });
+      
+      toast({
+        title: "Success",
+        description: `Tour request ${action}ed successfully!`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update request status.",
+        variant: "destructive"
+      });
+    }
   };
 
   const generateTourIdea = async () => {
