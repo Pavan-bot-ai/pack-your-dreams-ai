@@ -723,6 +723,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!booking) {
         return res.status(404).json({ error: "Booking not found" });
       }
+
+      // Create notification for the user when booking is accepted or declined
+      if (req.body.status === 'accepted' || req.body.status === 'declined') {
+        const title = req.body.status === 'accepted' ? 
+          "Booking Request Accepted!" : "Booking Request Declined";
+        const message = req.body.status === 'accepted' ? 
+          `Your guide has accepted your booking for ${booking.destination}` :
+          `Your guide has declined your booking for ${booking.destination}`;
+
+        await storage.createUserNotification({
+          userId: booking.userId,
+          type: `booking_${req.body.status}`,
+          title,
+          message,
+          relatedId: booking.id
+        });
+      }
+
       res.json(booking);
     } catch (error) {
       console.error("Error updating booking status:", error);
@@ -808,6 +826,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     ws.on('close', () => {
       console.log('WebSocket connection closed');
     });
+  });
+
+  // User notifications endpoint
+  app.get("/api/user-notifications", authenticateToken, async (req, res) => {
+    try {
+      const notifications = await storage.getUserNotifications(req.user.id);
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching user notifications:", error);
+      res.status(500).json({ error: "Failed to fetch notifications" });
+    }
+  });
+
+  app.patch("/api/user-notifications/:id/read", authenticateToken, async (req, res) => {
+    try {
+      await storage.markUserNotificationAsRead(parseInt(req.params.id));
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ error: "Failed to mark notification as read" });
+    }
   });
 
   return httpServer;

@@ -44,10 +44,13 @@ import {
   type GuideMessage,
   type InsertGuideMessage,
   type GuideNotification,
-  type InsertGuideNotification
+  type InsertGuideNotification,
+  userNotifications,
+  type UserNotification,
+  type InsertUserNotification
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 
 // modify the interface with any CRUD methods
 // you might need
@@ -123,6 +126,11 @@ export interface IStorage {
   getNotificationsByUser(userId: number): Promise<GuideNotification[]>;
   markNotificationAsRead(id: number): Promise<void>;
   getAvailableGuides(): Promise<User[]>;
+  
+  // User notification methods
+  createUserNotification(notification: InsertUserNotification): Promise<UserNotification>;
+  getUserNotifications(userId: number): Promise<UserNotification[]>;
+  markUserNotificationAsRead(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -575,6 +583,26 @@ export class DatabaseStorage implements IStorage {
 
   async getAvailableGuides(): Promise<User[]> {
     return await db.select().from(users).where(eq(users.role, 'guide'));
+  }
+
+  async createUserNotification(insertNotification: InsertUserNotification): Promise<UserNotification> {
+    const [notification] = await db
+      .insert(userNotifications)
+      .values(insertNotification)
+      .returning();
+    return notification;
+  }
+
+  async getUserNotifications(userId: number): Promise<UserNotification[]> {
+    return await db.select().from(userNotifications)
+      .where(eq(userNotifications.userId, userId))
+      .orderBy(desc(userNotifications.createdAt));
+  }
+
+  async markUserNotificationAsRead(id: number): Promise<void> {
+    await db.update(userNotifications)
+      .set({ isRead: true })
+      .where(eq(userNotifications.id, id));
   }
 }
 

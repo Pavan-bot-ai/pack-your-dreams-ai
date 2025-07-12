@@ -1,7 +1,4 @@
-import React, { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,22 +6,22 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { MapPin, Clock, Users, DollarSign, MessageCircle, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Calendar, Clock, Users, DollarSign, Star, MessageCircle } from "lucide-react";
-import GuideMessaging from "./GuideMessaging";
-import UserNotifications from "./UserNotifications";
+import { GuideMessaging } from "./GuideMessaging";
+import { UserNotifications } from "./UserNotifications";
 
 interface Guide {
   id: number;
-  username: string;
   name: string;
-  bio?: string;
-  phone?: string;
-  experience?: number;
-  hourlyRate?: number;
-  serviceAreas?: string[];
-  languages?: string[];
-  tourInterests?: string[];
+  bio: string;
+  hourlyRate: number;
+  serviceAreas: string[];
+  languages: string[];
+  tourInterests: string[];
   rating?: number;
   totalReviews?: number;
 }
@@ -93,17 +90,6 @@ export function GuideBooking({ onClose }: { onClose: () => void }) {
     }
   });
 
-  // Early return for messaging
-  if (showMessaging && activeBookingId) {
-    return (
-      <GuideMessaging 
-        bookingId={activeBookingId}
-        onBack={() => setShowMessaging(false)}
-        onClose={onClose}
-      />
-    );
-  }
-
   const handleBookingSubmit = () => {
     if (!selectedGuide || !user) return;
 
@@ -132,6 +118,17 @@ export function GuideBooking({ onClose }: { onClose: () => void }) {
     createBookingMutation.mutate(request);
   };
 
+  // Early return for messaging
+  if (showMessaging && activeBookingId) {
+    return (
+      <GuideMessaging 
+        bookingId={activeBookingId}
+        onBack={() => setShowMessaging(false)}
+        onClose={onClose}
+      />
+    );
+  }
+
   const renderStepOne = () => (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
@@ -146,11 +143,11 @@ export function GuideBooking({ onClose }: { onClose: () => void }) {
           <Input
             id="destination"
             value={bookingData.destination}
-            onChange={(e) => setBookingData({...bookingData, destination: e.target.value})}
-            placeholder="Where would you like to visit?"
+            onChange={(e) => setBookingData(prev => ({ ...prev, destination: e.target.value }))}
+            placeholder="Where do you want to explore?"
           />
         </div>
-        
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="date">Date</Label>
@@ -158,50 +155,63 @@ export function GuideBooking({ onClose }: { onClose: () => void }) {
               id="date"
               type="date"
               value={bookingData.date}
-              onChange={(e) => setBookingData({...bookingData, date: e.target.value})}
+              onChange={(e) => setBookingData(prev => ({ ...prev, date: e.target.value }))}
+              min={new Date().toISOString().split('T')[0]}
             />
           </div>
           <div>
             <Label htmlFor="time">Time</Label>
-            <Input
-              id="time"
-              type="time"
-              value={bookingData.time}
-              onChange={(e) => setBookingData({...bookingData, time: e.target.value})}
-            />
+            <Select value={bookingData.time} onValueChange={(value) => setBookingData(prev => ({ ...prev, time: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select time" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="09:00">9:00 AM</SelectItem>
+                <SelectItem value="10:00">10:00 AM</SelectItem>
+                <SelectItem value="11:00">11:00 AM</SelectItem>
+                <SelectItem value="12:00">12:00 PM</SelectItem>
+                <SelectItem value="13:00">1:00 PM</SelectItem>
+                <SelectItem value="14:00">2:00 PM</SelectItem>
+                <SelectItem value="15:00">3:00 PM</SelectItem>
+                <SelectItem value="16:00">4:00 PM</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
-        
+
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Label htmlFor="duration">Duration</Label>
-            <Select value={bookingData.duration} onValueChange={(value) => setBookingData({...bookingData, duration: value})}>
+            <Select value={bookingData.duration} onValueChange={(value) => setBookingData(prev => ({ ...prev, duration: value }))}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="1-2 hours">1-2 hours</SelectItem>
                 <SelectItem value="2-3 hours">2-3 hours</SelectItem>
-                <SelectItem value="half-day">Half day</SelectItem>
-                <SelectItem value="full-day">Full day</SelectItem>
-                <SelectItem value="multi-day">Multi-day</SelectItem>
+                <SelectItem value="4-6 hours">4-6 hours</SelectItem>
+                <SelectItem value="Full day">Full day</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
             <Label htmlFor="travelers">Travelers</Label>
-            <Input
-              id="travelers"
-              type="number"
-              min="1"
-              value={bookingData.travelers}
-              onChange={(e) => setBookingData({...bookingData, travelers: parseInt(e.target.value)})}
-            />
+            <Select value={bookingData.travelers?.toString()} onValueChange={(value) => setBookingData(prev => ({ ...prev, travelers: parseInt(value) }))}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[1,2,3,4,5,6,7,8].map(num => (
+                  <SelectItem key={num} value={num.toString()}>{num}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         <div>
-          <Label htmlFor="budget">Budget (USD)</Label>
-          <Select value={bookingData.budget} onValueChange={(value) => setBookingData({...bookingData, budget: value})}>
+          <Label htmlFor="budget">Budget Range</Label>
+          <Select value={bookingData.budget} onValueChange={(value) => setBookingData(prev => ({ ...prev, budget: value }))}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -215,15 +225,23 @@ export function GuideBooking({ onClose }: { onClose: () => void }) {
         </div>
 
         <div>
-          <Label htmlFor="requests">Special Requests</Label>
+          <Label htmlFor="requests">Special Requests (Optional)</Label>
           <Textarea
             id="requests"
             value={bookingData.specialRequests}
-            onChange={(e) => setBookingData({...bookingData, specialRequests: e.target.value})}
-            placeholder="Any specific requests or preferences?"
+            onChange={(e) => setBookingData(prev => ({ ...prev, specialRequests: e.target.value }))}
+            placeholder="Any specific preferences or needs?"
             rows={3}
           />
         </div>
+
+        <Button 
+          onClick={() => setStep(2)} 
+          className="w-full"
+          disabled={!bookingData.destination || !bookingData.date || !bookingData.time}
+        >
+          Find Local Guides
+        </Button>
       </CardContent>
     </Card>
   );
@@ -231,48 +249,54 @@ export function GuideBooking({ onClose }: { onClose: () => void }) {
   const renderStepTwo = () => (
     <div className="w-full max-w-4xl mx-auto">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold mb-2">Available Local Guides</h2>
-        <p className="text-muted-foreground">Choose a guide for your {bookingData.destination} experience</p>
+        <Button variant="outline" onClick={() => setStep(1)} className="mb-4">
+          ← Back to Details
+        </Button>
+        <h2 className="text-2xl font-bold">Available Local Guides</h2>
+        <p className="text-muted-foreground">Choose your perfect local guide for {bookingData.destination}</p>
       </div>
 
-      {guidesLoading && (
+      {guidesLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3].map(i => (
+          {[1,2,3].map(i => (
             <Card key={i} className="animate-pulse">
               <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-4"></div>
+                <div className="h-3 bg-gray-200 rounded w-full mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
               </CardContent>
             </Card>
           ))}
         </div>
-      )}
-
-      {!guidesLoading && (
+      ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {guides.map((guide: Guide) => (
             <Card 
               key={guide.id} 
-              className={`cursor-pointer transition-all ${selectedGuide?.id === guide.id ? 'ring-2 ring-blue-500' : ''}`}
+              className={`cursor-pointer transition-all hover:shadow-lg ${
+                selectedGuide?.id === guide.id ? 'ring-2 ring-blue-500' : ''
+              }`}
               onClick={() => setSelectedGuide(guide)}
             >
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-3">
-                  <h3 className="font-semibold">{guide.name}</h3>
+                  <h3 className="font-semibold text-lg">{guide.name}</h3>
                   <div className="flex items-center gap-1">
                     <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                     <span className="text-sm">{guide.rating || 4.8}</span>
                   </div>
                 </div>
-
+                
+                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{guide.bio}</p>
+                
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center gap-2 text-sm">
                     <DollarSign className="h-4 w-4" />
-                    <span>${guide.hourlyRate || 45}/hour</span>
+                    <span>${guide.hourlyRate}/hour</span>
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {guide.languages?.slice(0, 2).map(lang => (
-                      <Badge key={lang} variant="outline" className="text-xs">{lang}</Badge>
+                      <Badge key={lang} variant="secondary" className="text-xs">{lang}</Badge>
                     ))}
                   </div>
                 </div>
@@ -328,44 +352,43 @@ export function GuideBooking({ onClose }: { onClose: () => void }) {
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-semibold">{booking.destination}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {booking.date} at {booking.time} • {booking.duration}
-                    </p>
-                    <div className="flex items-center gap-4 mt-2">
-                      <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        <span className="text-sm">{booking.travelers} travelers</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <DollarSign className="h-4 w-4" />
-                        <span className="text-sm">${booking.budget}</span>
-                      </div>
+                  <p className="text-sm text-muted-foreground">
+                    {booking.date} at {booking.time} • {booking.duration}
+                  </p>
+                  <div className="flex items-center gap-4 mt-2">
+                    <div className="flex items-center gap-1">
+                      <Users className="h-4 w-4" />
+                      <span className="text-sm">{booking.travelers} travelers</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <DollarSign className="h-4 w-4" />
+                      <span className="text-sm">${booking.budget}</span>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={
-                      booking.status === 'pending' ? 'secondary' :
-                      booking.status === 'accepted' ? 'default' :
-                      booking.status === 'rejected' ? 'destructive' : 'outline'
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={
+                    booking.status === 'pending' ? 'secondary' :
+                    booking.status === 'accepted' ? 'default' :
+                    booking.status === 'rejected' ? 'destructive' : 'outline'
                     }>
                       {booking.status}
                     </Badge>
                     <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => {
-                        setActiveBookingId(booking.id);
-                        setShowMessaging(true);
-                      }}
+                    size="sm" 
+                    variant="outline"
+                    onClick={() => {
+                      setActiveBookingId(booking.id);
+                      setShowMessaging(true);
+                    }}
                     >
                       <MessageCircle className="h-4 w-4" />
                     </Button>
-                  </div>
                 </div>
+              </div>
               </CardContent>
-            </Card>
-          ))}
-        </div>
+          </Card>
+        ))}
       </div>
     </div>
   );
@@ -410,5 +433,3 @@ export function GuideBooking({ onClose }: { onClose: () => void }) {
     </div>
   );
 }
-
-export default GuideBooking;

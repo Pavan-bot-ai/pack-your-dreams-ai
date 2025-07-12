@@ -417,6 +417,17 @@ export const guideNotifications = pgTable("guide_notifications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const userNotifications = pgTable("user_notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  type: text("type").notNull(), // booking_accepted, booking_rejected, new_message
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  relatedId: integer("related_id"), // booking_id or message_id
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Guide booking and messaging schemas
 export const insertGuideBookingSchema = createInsertSchema(guideBookings).pick({
   userId: true,
@@ -447,9 +458,19 @@ export const insertGuideNotificationSchema = createInsertSchema(guideNotificatio
   relatedId: true,
 });
 
+export const insertUserNotificationSchema = createInsertSchema(userNotifications).pick({
+  userId: true,
+  type: true,
+  title: true,
+  message: true,
+  relatedId: true,
+});
+
 export type InsertGuideBooking = z.infer<typeof insertGuideBookingSchema>;
 export type GuideBooking = typeof guideBookings.$inferSelect;
 export type InsertGuideMessage = z.infer<typeof insertGuideMessageSchema>;
 export type GuideMessage = typeof guideMessages.$inferSelect;
 export type InsertGuideNotification = z.infer<typeof insertGuideNotificationSchema>;
 export type GuideNotification = typeof guideNotifications.$inferSelect;
+export type InsertUserNotification = z.infer<typeof insertUserNotificationSchema>;
+export type UserNotification = typeof userNotifications.$inferSelect;

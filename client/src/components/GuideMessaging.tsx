@@ -280,3 +280,5 @@ export function GuideMessaging({
     </div>
   );
 }
+
+export default GuideMessaging;
