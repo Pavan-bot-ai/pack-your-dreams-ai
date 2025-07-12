@@ -707,6 +707,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/guide-bookings/guide", authenticateToken, async (req, res) => {
+    try {
+      const bookings = await storage.getGuideBookingsByGuide(req.user.id);
+      res.json(bookings);
+    } catch (error) {
+      console.error("Error fetching guide bookings:", error);
+      res.status(500).json({ error: "Failed to fetch bookings" });
+    }
+  });
+
   app.get("/api/guide-bookings/:id", authenticateToken, async (req, res) => {
     try {
       const booking = await storage.getGuideBookingById(parseInt(req.params.id));

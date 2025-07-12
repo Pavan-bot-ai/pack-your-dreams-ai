@@ -77,8 +77,7 @@ export function GuideBooking({ onClose }: { onClose: () => void }) {
         description: "Your guide will receive your request and respond soon."
       });
       queryClient.invalidateQueries({ queryKey: ['/api/guide-bookings/user'] });
-      setActiveBookingId(response.id);
-      setShowMessaging(true);
+      setStep(3); // Go to bookings view instead of messaging
     },
     onError: () => {
       toast({

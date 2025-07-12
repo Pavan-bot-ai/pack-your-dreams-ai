@@ -31,6 +31,8 @@ import {
   Phone
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 interface GuideDashboardProps {
   user: any;
@@ -40,7 +42,6 @@ interface GuideDashboardProps {
 const GuideDashboard = ({ user, onLogout }: GuideDashboardProps) => {
   const [activeTab, setActiveTab] = useState("overview");
   const [currentView, setCurrentView] = useState("home"); // home, transactions, profile
-  const [newRequests, setNewRequests] = useState([]);
   const [earnings, setEarnings] = useState({ total: 0, thisMonth: 0, thisWeek: 0 });
   const [tourIdeas, setTourIdeas] = useState([]);
   const [ideaPrompt, setIdeaPrompt] = useState("");
@@ -54,6 +55,12 @@ const GuideDashboard = ({ user, onLogout }: GuideDashboardProps) => {
     nextTour: null
   });
   const { toast } = useToast();
+
+  // Fetch guide booking requests
+  const { data: guideBookings = [], isLoading: bookingsLoading } = useQuery({
+    queryKey: ['/api/guide-bookings/guide'],
+    enabled: !!user
+  });
 
   useEffect(() => {
     // Simulate loading guide data
@@ -70,46 +77,6 @@ const GuideDashboard = ({ user, onLogout }: GuideDashboardProps) => {
   }, []);
 
   const loadGuideData = () => {
-    // Simulate new tour requests with more realistic data
-    setNewRequests([
-      {
-        id: 1,
-        travelerName: "Sarah Johnson",
-        destination: "Paris Historic District",
-        date: "2025-01-15",
-        duration: "4 hours",
-        travelers: 2,
-        budget: "$150",
-        message: "Looking for a comprehensive tour of Montmartre with focus on art history.",
-        status: "pending",
-        timeAgo: "2 hours ago"
-      },
-      {
-        id: 2,
-        travelerName: "Mike Chen",
-        destination: "Tokyo Food Culture",
-        date: "2025-01-18",
-        duration: "6 hours",
-        travelers: 4,
-        budget: "$200",
-        message: "Want to experience authentic local cuisine and hidden food spots.",
-        status: "pending",
-        timeAgo: "5 hours ago"
-      },
-      {
-        id: 3,
-        travelerName: "Emma Rodriguez",
-        destination: "Barcelona Architecture",
-        date: "2025-01-20",
-        duration: "3 hours",
-        travelers: 3,
-        budget: "$120",
-        message: "Interested in Gaudi's works and modernist architecture around the city.",
-        status: "pending",
-        timeAgo: "1 day ago"
-      }
-    ]);
-
     // Simulate earnings data with more realistic numbers  
     setEarnings({
       total: parseFloat(user.totalEarnings) || 3250,
@@ -257,7 +224,7 @@ const GuideDashboard = ({ user, onLogout }: GuideDashboardProps) => {
     },
     {
       title: "New Requests",
-      value: newRequests.length.toString(),
+      value: guideBookings.filter(b => b.status === 'pending').length.toString(),
       icon: Bell,
       change: "",
       period: "awaiting response"
@@ -515,25 +482,31 @@ const GuideDashboard = ({ user, onLogout }: GuideDashboardProps) => {
                   <CardTitle>New Tour Requests</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {newRequests.filter(req => req.status === "pending").length === 0 ? (
+                  {bookingsLoading ? (
+                    <p className="text-gray-500 text-center py-8">Loading booking requests...</p>
+                  ) : guideBookings.filter(req => req.status === "pending").length === 0 ? (
                     <p className="text-gray-500 text-center py-8">No new requests at the moment.</p>
                   ) : (
-                    newRequests.filter(req => req.status === "pending").map((request) => (
+                    guideBookings.filter(req => req.status === "pending").map((request) => (
                       <Card key={request.id} className="border-l-4 border-l-blue-500">
                         <CardContent className="p-4">
                           <div className="flex justify-between items-start mb-3">
                             <div>
-                              <h4 className="font-semibold">{request.travelerName}</h4>
+                              <h4 className="font-semibold">Booking Request #{request.id}</h4>
                               <p className="text-sm text-gray-600">{request.destination}</p>
-                              <p className="text-xs text-gray-500">{request.timeAgo}</p>
+                              <p className="text-xs text-gray-500">{new Date(request.createdAt).toLocaleDateString()}</p>
                             </div>
-                            <Badge variant="outline">{request.budget}</Badge>
+                            <Badge variant="outline">${request.budget}</Badge>
                           </div>
                           
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3 text-sm">
                             <div>
                               <span className="text-gray-500">Date:</span>
                               <p className="font-medium">{request.date}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Time:</span>
+                              <p className="font-medium">{request.time}</p>
                             </div>
                             <div>
                               <span className="text-gray-500">Duration:</span>
@@ -543,16 +516,14 @@ const GuideDashboard = ({ user, onLogout }: GuideDashboardProps) => {
                               <span className="text-gray-500">Travelers:</span>
                               <p className="font-medium">{request.travelers}</p>
                             </div>
-                            <div>
-                              <span className="text-gray-500">Budget:</span>
-                              <p className="font-medium">{request.budget}</p>
-                            </div>
                           </div>
                           
-                          <div className="mb-4">
-                            <span className="text-gray-500 text-sm">Message:</span>
-                            <p className="text-sm mt-1">{request.message}</p>
-                          </div>
+                          {request.specialRequests && (
+                            <div className="mb-4">
+                              <span className="text-gray-500 text-sm">Special Requests:</span>
+                              <p className="text-sm mt-1">{request.specialRequests}</p>
+                            </div>
+                          )}
                           
                           <div className="flex space-x-3">
                             <Button 
