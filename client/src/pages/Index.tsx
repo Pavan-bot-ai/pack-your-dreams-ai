@@ -6,7 +6,13 @@ import QuickActionsSection from "@/components/QuickActionsSection";
 import VideoReelsSection from "@/components/VideoReelsSection";
 import ModalManager from "@/components/ModalManager";
 
-const Index = () => {
+interface IndexProps {
+  onLoginClick?: () => void;
+  currentUser?: any;
+  onLogout?: () => void;
+}
+
+const Index = ({ onLoginClick, currentUser, onLogout }: IndexProps = {}) => {
   const {
     // State
     showAuth,
@@ -43,10 +49,10 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
       <Header
-        isLoggedIn={isLoggedIn}
+        isLoggedIn={!!currentUser || isLoggedIn}
         onMenuItemClick={handleMenuItemClick}
-        onAuthClick={() => setShowAuth(true)}
-        onLogout={handleLogout}
+        onAuthClick={onLoginClick || (() => setShowAuth(true))}
+        onLogout={onLogout || handleLogout}
       />
 
       <HeroSection

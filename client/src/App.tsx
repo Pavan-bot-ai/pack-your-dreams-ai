@@ -1,11 +1,18 @@
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
-import { AuthProvider } from "./contexts/AuthContext";
-import { LanguageProvider } from "./contexts/LanguageContext";
 import { Router, Route, Switch } from "wouter";
+
+// Auth Components
+import AuthPage from "./pages/AuthPage";
+import GuideRegistration from "./pages/GuideRegistration";
+import UserDashboard from "./pages/UserDashboard";
+import GuideDashboard from "./pages/GuideDashboard";
+
+// Existing Components
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import BookedPlans from "./pages/BookedPlans";
@@ -27,18 +34,107 @@ import TripPaymentMethods from "./pages/TripPaymentMethods";
 import TripPaymentDetails from "./pages/TripPaymentDetails";
 import TripPaymentStatus from "./pages/TripPaymentStatus";
 
+const App = () => {
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showGuideRegistration, setShowGuideRegistration] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
 
+  useEffect(() => {
+    // Check for existing user session
+    const user = localStorage.getItem("travelApp_currentUser");
+    if (user) {
+      setCurrentUser(JSON.parse(user));
+    }
+    setIsLoading(false);
+  }, []);
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <LanguageProvider>
+  const handleAuthSuccess = (user: any) => {
+    setCurrentUser(user);
+    setShowAuth(false);
+    setShowGuideRegistration(false);
+  };
+
+  const handleGuideRegistration = () => {
+    setShowAuth(false);
+    setShowGuideRegistration(true);
+  };
+
+  const handleGuideRegistrationComplete = (user: any) => {
+    setCurrentUser(user);
+    setShowGuideRegistration(false);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("travelApp_currentUser");
+    setCurrentUser(null);
+  };
+
+  const handleLoginClick = () => {
+    setShowAuth(true);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full"></div>
+      </div>
+    );
+  }
+
+  // Show Guide Registration if user is guide but registration not complete
+  if (showGuideRegistration || (currentUser?.role === "guide" && !currentUser?.isRegistrationComplete)) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <GuideRegistration onRegistrationComplete={handleGuideRegistrationComplete} />
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+  }
+
+  // Show Auth Page if not logged in or explicitly requested
+  if (!currentUser || showAuth) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <AuthPage 
+            onAuthSuccess={handleAuthSuccess}
+            onGuideRegistration={handleGuideRegistration}
+          />
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+  }
+
+  // Show Role-Based Dashboard for authenticated users
+  if (currentUser.role === "guide") {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <GuideDashboard user={currentUser} onLogout={handleLogout} />
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+  }
+
+  // Show User Dashboard or existing app for regular users
+  if (currentUser.role === "user") {
+    return (
+      <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
           <Sonner />
           <Router>
             <Switch>
-              <Route path="/" component={Index} />
+              <Route path="/dashboard" component={() => <UserDashboard user={currentUser} onLogout={handleLogout} />} />
+              <Route path="/" component={() => <Index onLoginClick={handleLoginClick} currentUser={currentUser} onLogout={handleLogout} />} />
               <Route path="/booked-plans" component={BookedPlans} />
               <Route path="/transactions" component={Transactions} />
               <Route path="/transaction-details/:tripId" component={TransactionDetails} />
@@ -57,14 +153,27 @@ const App = () => (
               <Route path="/trip-payment-methods" component={TripPaymentMethods} />
               <Route path="/trip-payment-details" component={TripPaymentDetails} />
               <Route path="/trip-payment-status" component={TripPaymentStatus} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route component={NotFound} />
             </Switch>
           </Router>
         </TooltipProvider>
-      </LanguageProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-);
+      </QueryClientProvider>
+    );
+  }
+
+  // Fallback - should not reach here
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <AuthPage 
+          onAuthSuccess={handleAuthSuccess}
+          onGuideRegistration={handleGuideRegistration}
+        />
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
+};
 
 export default App;
