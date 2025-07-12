@@ -224,6 +224,16 @@ export function GuideBooking({ onClose }: { onClose: () => void }) {
             rows={3}
           />
         </div>
+
+        <div className="pt-4">
+          <Button 
+            onClick={() => setStep(2)}
+            disabled={!bookingData.destination || !bookingData.date || !bookingData.time}
+            className="w-full"
+          >
+            Proceed to Find Guides
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
