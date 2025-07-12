@@ -88,7 +88,21 @@ const TransportPayment = ({ amount, onPaymentComplete, bookingDetails }: Transpo
     onSuccess: (data) => {
       setTransactionId(data.transactionId);
       setCurrentStep('status');
-      onPaymentComplete(data);
+      
+      // Structure the payment result correctly for PaymentStatus component
+      const paymentResult = {
+        transactionId: data.transactionId,
+        amount: amount,
+        paymentMethod: selectedMethod,
+        status: 'success',
+        bookingDetails: {
+          serviceName: bookingDetails.name || bookingDetails.serviceName,
+          description: bookingDetails.description,
+          ...bookingDetails
+        }
+      };
+      
+      onPaymentComplete(paymentResult);
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/transport-bookings'] });
     },

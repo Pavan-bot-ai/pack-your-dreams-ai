@@ -37,16 +37,16 @@ const PaymentStatus = ({ paymentResult, onContinue }: PaymentStatusProps) => {
 
   useEffect(() => {
     // Save transaction to database
-    if (paymentResult && !isSaving) {
+    if (paymentResult && !isSaving && paymentResult.transactionId && paymentResult.amount) {
       setIsSaving(true);
       
       const transactionData = {
         transactionId: paymentResult.transactionId,
-        amount: paymentResult.amount.toString(),
-        paymentMethod: paymentResult.paymentMethod,
-        paymentStatus: paymentResult.status,
+        amount: (paymentResult.amount || 0).toString(),
+        paymentMethod: paymentResult.paymentMethod || "unknown",
+        paymentStatus: paymentResult.status || "pending",
         bookingType: "transport",
-        bookingDetails: JSON.stringify(paymentResult.bookingDetails),
+        bookingDetails: JSON.stringify(paymentResult.bookingDetails || {}),
         userId: 1 // In a real app, this would come from the authenticated user
       };
 
