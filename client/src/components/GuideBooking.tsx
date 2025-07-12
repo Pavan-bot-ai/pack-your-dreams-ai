@@ -79,7 +79,8 @@ export function GuideBooking({ onClose }: { onClose: () => void }) {
       queryClient.invalidateQueries({ queryKey: ['/api/guide-bookings/user'] });
       setStep(3); // Go to bookings view instead of messaging
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Booking request error:", error);
       toast({
         title: "Error",
         description: "Failed to send booking request. Please try again.",
@@ -91,17 +92,28 @@ export function GuideBooking({ onClose }: { onClose: () => void }) {
   const handleBookingSubmit = () => {
     if (!selectedGuide || !user) return;
 
+    // Validate required fields
+    if (!bookingData.destination || !bookingData.date || !bookingData.time) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in destination, date, and time.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const request: GuideBookingRequest = {
       guideId: selectedGuide.id,
-      destination: bookingData.destination!,
-      date: bookingData.date!,
-      time: bookingData.time!,
+      destination: bookingData.destination,
+      date: bookingData.date,
+      time: bookingData.time,
       duration: bookingData.duration!,
       travelers: bookingData.travelers!,
       budget: bookingData.budget!,
       specialRequests: bookingData.specialRequests
     };
 
+    console.log("Submitting booking request:", request);
     createBookingMutation.mutate(request);
   };
 
