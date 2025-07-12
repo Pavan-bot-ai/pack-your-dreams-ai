@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,15 +20,9 @@ import {
 } from "lucide-react";
 
 interface TransportPaymentProps {
-  isOpen: boolean;
-  onClose: () => void;
-  bookingDetails: {
-    type: string;
-    serviceName: string;
-    description: string;
-    amount: number;
-    details: any;
-  };
+  amount: number;
+  onPaymentComplete: (paymentDetails: any) => void;
+  bookingDetails: any;
 }
 
 interface PaymentDetails {
@@ -45,7 +38,7 @@ interface PaymentDetails {
   walletNumber?: string;
 }
 
-const TransportPayment = ({ isOpen, onClose, bookingDetails }: TransportPaymentProps) => {
+const TransportPayment = ({ amount, onPaymentComplete, bookingDetails }: TransportPaymentProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -95,6 +88,7 @@ const TransportPayment = ({ isOpen, onClose, bookingDetails }: TransportPaymentP
     onSuccess: (data) => {
       setTransactionId(data.transactionId);
       setCurrentStep('status');
+      onPaymentComplete(data);
       queryClient.invalidateQueries({ queryKey: ['/api/transactions'] });
       queryClient.invalidateQueries({ queryKey: ['/api/transport-bookings'] });
     },
@@ -132,13 +126,13 @@ const TransportPayment = ({ isOpen, onClose, bookingDetails }: TransportPaymentP
     setIsProcessing(true);
     
     const bookingData = {
-      bookingType: bookingDetails.type,
+      bookingType: bookingDetails.type || 'transport',
       serviceDetails: JSON.stringify({
-        serviceName: bookingDetails.serviceName,
+        serviceName: bookingDetails.name || bookingDetails.serviceName,
         description: bookingDetails.description,
-        ...bookingDetails.details
+        ...bookingDetails
       }),
-      amount: bookingDetails.amount,
+      amount: amount,
       paymentMethod: selectedMethod,
       paymentDetails: JSON.stringify(paymentDetails)
     };
@@ -192,13 +186,12 @@ const TransportPayment = ({ isOpen, onClose, bookingDetails }: TransportPaymentP
     setPaymentDetails(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleClose = () => {
+  const resetForm = () => {
     setCurrentStep('method');
     setSelectedMethod('');
     setPaymentDetails({});
     setTransactionId('');
     setIsProcessing(false);
-    onClose();
   };
 
   const renderPaymentMethodSelection = () => (
@@ -212,11 +205,11 @@ const TransportPayment = ({ isOpen, onClose, bookingDetails }: TransportPaymentP
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-semibold">{bookingDetails.serviceName}</h4>
-              <p className="text-sm text-gray-600">{bookingDetails.description}</p>
+              <h4 className="font-semibold">{bookingDetails.name || bookingDetails.serviceName}</h4>
+              <p className="text-sm text-gray-600">{bookingDetails.description || 'Transport booking'}</p>
             </div>
             <Badge variant="secondary" className="text-lg font-bold">
-              ₹{bookingDetails.amount}
+              ₹{amount}
             </Badge>
           </div>
         </CardContent>
@@ -285,11 +278,11 @@ const TransportPayment = ({ isOpen, onClose, bookingDetails }: TransportPaymentP
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-semibold">{bookingDetails.serviceName}</h4>
+                <h4 className="font-semibold">{bookingDetails.name || bookingDetails.serviceName}</h4>
                 <p className="text-sm text-gray-600">Payment Method: {selectedMethodData?.name}</p>
               </div>
               <Badge variant="secondary" className="text-lg font-bold">
-                ₹{bookingDetails.amount}
+                ₹{amount}
               </Badge>
             </div>
           </CardContent>
@@ -428,7 +421,7 @@ const TransportPayment = ({ isOpen, onClose, bookingDetails }: TransportPaymentP
           className="w-full bg-green-600 hover:bg-green-700"
           disabled={isProcessing}
         >
-          {isProcessing ? 'Processing...' : `Pay ₹${bookingDetails.amount}`}
+          {isProcessing ? 'Processing...' : `Pay ₹${amount}`}
         </Button>
       </div>
     );
@@ -459,7 +452,7 @@ const TransportPayment = ({ isOpen, onClose, bookingDetails }: TransportPaymentP
           </div>
           <div className="flex justify-between items-center">
             <span className="font-medium">Amount:</span>
-            <span className="font-bold">₹{bookingDetails.amount}</span>
+            <span className="font-bold">₹{amount}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="font-medium">Payment Method:</span>
@@ -472,7 +465,7 @@ const TransportPayment = ({ isOpen, onClose, bookingDetails }: TransportPaymentP
         <p className="text-sm text-gray-600">
           You can view this transaction in your Transactions history.
         </p>
-        <Button onClick={handleClose} className="w-full">
+        <Button onClick={resetForm} className="w-full">
           Done
         </Button>
       </div>
@@ -480,26 +473,11 @@ const TransportPayment = ({ isOpen, onClose, bookingDetails }: TransportPaymentP
   );
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
-              <CreditCard className="w-4 h-4 text-white" />
-            </div>
-            <span>
-              {currentStep === 'method' && 'Payment Method'}
-              {currentStep === 'details' && 'Payment Details'}
-              {currentStep === 'status' && 'Payment Status'}
-            </span>
-          </DialogTitle>
-        </DialogHeader>
-
-        {currentStep === 'method' && renderPaymentMethodSelection()}
-        {currentStep === 'details' && renderPaymentDetails()}
-        {currentStep === 'status' && renderPaymentStatus()}
-      </DialogContent>
-    </Dialog>
+    <div className="space-y-6">
+      {currentStep === 'method' && renderPaymentMethodSelection()}
+      {currentStep === 'details' && renderPaymentDetails()}
+      {currentStep === 'status' && renderPaymentStatus()}
+    </div>
   );
 };
 
