@@ -142,6 +142,7 @@ export interface IStorage {
   createTransportBooking(booking: InsertTransportBooking): Promise<TransportBooking>;
   getTransportBookingsByUser(userId: number): Promise<TransportBooking[]>;
   getTransportBookingById(id: number): Promise<TransportBooking | undefined>;
+  getAllTransportBookings(): Promise<TransportBooking[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -660,6 +661,20 @@ export class DatabaseStorage implements IStorage {
       .where(eq(transportBookings.id, id));
     return booking || undefined;
   }
+
+  async getAllTransportBookings(): Promise<TransportBooking[]> {
+    return await db
+      .select()
+      .from(transportBookings)
+      .orderBy(desc(transportBookings.createdAt));
+  }
+
+  async getAllBookedPlans(): Promise<BookedPlan[]> {
+    return await db
+      .select()
+      .from(bookedPlans)
+      .orderBy(desc(bookedPlans.createdAt));
+  }
 }
 
 export class MemStorage implements IStorage {
@@ -1096,6 +1111,7 @@ export class MemStorage implements IStorage {
   }
   async getTransportBookingsByUser(userId: number): Promise<TransportBooking[]> { return []; }
   async getTransportBookingById(id: number): Promise<TransportBooking | undefined> { return undefined; }
+  async getAllTransportBookings(): Promise<TransportBooking[]> { return []; }
 }
 
 export const storage = new DatabaseStorage();

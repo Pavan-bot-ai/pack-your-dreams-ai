@@ -226,9 +226,9 @@ async function loadBookingsData() {
         });
         const bookings = await response.json();
         
-        // Update booking statistics
-        const pending = bookings.filter(b => b.status === 'pending').length;
-        const confirmed = bookings.filter(b => b.status === 'accepted').length;
+        // Update booking statistics with actual status values
+        const pending = bookings.filter(b => b.status === 'pending' || b.paymentStatus === 'pending').length;
+        const confirmed = bookings.filter(b => b.status === 'confirmed' || b.status === 'accepted' || b.paymentStatus === 'successful').length;
         const completed = bookings.filter(b => b.status === 'completed').length;
         
         document.getElementById('pendingBookings').textContent = pending;
@@ -238,17 +238,37 @@ async function loadBookingsData() {
         const tbody = document.getElementById('bookingsTableBody');
         tbody.innerHTML = bookings.map(booking => `
             <tr class="border-b hover:bg-gray-50">
-                <td class="py-3">#${booking.id}</td>
+                <td class="py-3">
+                    <div class="flex flex-col">
+                        <span class="font-medium">#${booking.id}</span>
+                        <span class="text-xs text-gray-500 uppercase">${booking.type}</span>
+                    </div>
+                </td>
                 <td class="py-3">${booking.userName || 'N/A'}</td>
                 <td class="py-3">${booking.guideName || 'N/A'}</td>
-                <td class="py-3">${booking.destination}</td>
+                <td class="py-3">
+                    <div class="flex flex-col">
+                        <span class="font-medium">${booking.destination}</span>
+                        ${booking.duration ? `<span class="text-xs text-gray-500">${booking.duration}</span>` : ''}
+                    </div>
+                </td>
                 <td class="py-3">${booking.date}</td>
                 <td class="py-3">
-                    <span class="px-2 py-1 rounded-full text-xs ${getStatusColor(booking.status)}">
-                        ${booking.status}
-                    </span>
+                    <div class="flex flex-col gap-1">
+                        <span class="px-2 py-1 rounded-full text-xs ${getStatusColor(booking.status)}">
+                            ${booking.status}
+                        </span>
+                        ${booking.paymentStatus ? `<span class="px-2 py-1 rounded-full text-xs ${getPaymentStatusColor(booking.paymentStatus)}">
+                            ${booking.paymentStatus}
+                        </span>` : ''}
+                    </div>
                 </td>
-                <td class="py-3">$${booking.totalAmount || 'TBD'}</td>
+                <td class="py-3">
+                    <div class="flex flex-col">
+                        <span class="font-medium">$${(booking.totalAmount || 0).toFixed(2)}</span>
+                        ${booking.paymentMethod ? `<span class="text-xs text-gray-500">${booking.paymentMethod}</span>` : ''}
+                    </div>
+                </td>
             </tr>
         `).join('');
     } catch (error) {
@@ -699,9 +719,19 @@ function getStatusColor(status) {
         case 'suspended': return 'bg-red-100 text-red-800';
         case 'inactive': return 'bg-gray-100 text-gray-800';
         case 'pending': return 'bg-yellow-100 text-yellow-800';
-        case 'accepted': return 'bg-green-100 text-green-800';
+        case 'accepted': 
+        case 'confirmed': return 'bg-green-100 text-green-800';
         case 'rejected': return 'bg-red-100 text-red-800';
         case 'completed': return 'bg-blue-100 text-blue-800';
+        default: return 'bg-gray-100 text-gray-800';
+    }
+}
+
+function getPaymentStatusColor(status) {
+    switch(status) {
+        case 'successful': return 'bg-green-100 text-green-800';
+        case 'pending': return 'bg-yellow-100 text-yellow-800';
+        case 'failed': return 'bg-red-100 text-red-800';
         default: return 'bg-gray-100 text-gray-800';
     }
 }

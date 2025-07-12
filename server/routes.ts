@@ -867,32 +867,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/admin/bookings", adminAuthMiddleware, async (req, res) => {
     try {
-      const bookings = await storage.getAllHotelBookings();
+      // Fetch all types of bookings from database
+      const hotelBookings = await storage.getAllHotelBookings();
+      const transportBookings = await storage.getAllTransportBookings();
+      const bookedPlans = await storage.getAllBookedPlans();
       const guideBookings = await storage.getGuideBookingsByGuide(0); // Get all guide bookings
       
-      // Combine and format bookings
+      // Combine and format all bookings
       const allBookings = [
-        ...bookings.map(b => ({
-          id: b.id,
+        // Transport bookings
+        ...transportBookings.map(b => ({
+          id: `T${b.id}`,
+          type: 'transport',
+          userName: `User ${b.userId}`,
+          guideName: 'N/A',
+          destination: JSON.parse(b.serviceDetails || '{}').provider || 'Transport Service',
+          date: b.createdAt.toISOString().split('T')[0],
+          status: b.bookingStatus,
+          totalAmount: parseFloat(b.amount),
+          paymentStatus: b.paymentStatus,
+          paymentMethod: b.paymentMethod,
+          transactionId: b.transactionId
+        })),
+        // Hotel bookings
+        ...hotelBookings.map(b => ({
+          id: `H${b.id}`,
           type: 'hotel',
-          userName: 'User',
+          userName: `User ${b.userId}`,
           guideName: 'N/A',
           destination: b.destination,
           date: b.checkInDate,
-          status: 'confirmed',
-          totalAmount: b.totalAmount
+          status: b.bookingStatus,
+          totalAmount: parseFloat(b.totalAmount),
+          paymentStatus: b.paymentStatus,
+          paymentMethod: 'Credit Card'
         })),
+        // Booked plans
+        ...bookedPlans.map(b => ({
+          id: `P${b.id}`,
+          type: 'plan',
+          userName: `User ${b.userId}`,
+          guideName: 'N/A',
+          destination: b.destination,
+          date: b.travelDate,
+          status: b.bookingStatus,
+          totalAmount: parseFloat(b.totalAmount) / 100, // Convert from cents
+          paymentStatus: 'successful',
+          paymentMethod: b.paymentMethod,
+          duration: b.duration
+        })),
+        // Guide bookings
         ...guideBookings.map(b => ({
-          id: b.id,
+          id: `G${b.id}`,
           type: 'guide',
-          userName: 'User',
-          guideName: 'Guide',
+          userName: `User ${b.userId || 'Unknown'}`,
+          guideName: `Guide ${b.guideId || 'Unknown'}`,
           destination: b.destination,
           date: b.date,
           status: b.status,
-          totalAmount: b.totalAmount
+          totalAmount: parseFloat(b.totalAmount || 0),
+          paymentStatus: 'successful'
         }))
       ];
+
+      // Sort by most recent first
+      allBookings.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
       res.json(allBookings);
     } catch (error) {
