@@ -4,10 +4,12 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
+import { AuthProvider } from "./contexts/AuthContext";
+import { LanguageProvider } from "./contexts/LanguageContext";
 import { Router, Route, Switch } from "wouter";
 
 // Auth Components
-import AuthPage from "./pages/AuthPage";
+import AuthPageModal from "./components/AuthPageModal";
 import GuideRegistration from "./pages/GuideRegistration";
 import UserDashboard from "./pages/UserDashboard";
 import GuideDashboard from "./pages/GuideDashboard";
@@ -74,6 +76,10 @@ const App = () => {
     setShowAuth(true);
   };
 
+  const handleAuthClose = () => {
+    setShowAuth(false);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
@@ -95,24 +101,8 @@ const App = () => {
     );
   }
 
-  // Show Auth Page if not logged in or explicitly requested
-  if (!currentUser || showAuth) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <AuthPage 
-            onAuthSuccess={handleAuthSuccess}
-            onGuideRegistration={handleGuideRegistration}
-          />
-        </TooltipProvider>
-      </QueryClientProvider>
-    );
-  }
-
-  // Show Role-Based Dashboard for authenticated users
-  if (currentUser.role === "guide") {
+  // Show Role-Based Dashboard for authenticated guides (they go directly to dashboard)
+  if (currentUser?.role === "guide" && currentUser?.isRegistrationComplete) {
     return (
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
@@ -124,54 +114,64 @@ const App = () => {
     );
   }
 
-  // Show User Dashboard or existing app for regular users
-  if (currentUser.role === "user") {
-    return (
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Router>
-            <Switch>
-              <Route path="/dashboard" component={() => <UserDashboard user={currentUser} onLogout={handleLogout} />} />
-              <Route path="/" component={() => <Index onLoginClick={handleLoginClick} currentUser={currentUser} onLogout={handleLogout} />} />
-              <Route path="/booked-plans" component={BookedPlans} />
-              <Route path="/transactions" component={Transactions} />
-              <Route path="/transaction-details/:tripId" component={TransactionDetails} />
-              <Route path="/saved-places" component={SavedPlaces} />
-              <Route path="/trip-history" component={TripHistory} />
-              <Route path="/profile" component={Profile} />
-              <Route path="/settings" component={Settings} />
-              <Route path="/plan-generation" component={PlanGeneration} />
-              <Route path="/booking-flow" component={BookingFlow} />
-              <Route path="/booking-success" component={BookingSuccess} />
-              <Route path="/hotel-booking" component={HotelBooking} />
-              <Route path="/hotel-payment" component={HotelPayment} />
-              <Route path="/payment-status" component={PaymentStatus} />
-              <Route path="/hotel-booking-success" component={HotelBookingSuccess} />
-              <Route path="/trip-payment-summary" component={TripPaymentSummary} />
-              <Route path="/trip-payment-methods" component={TripPaymentMethods} />
-              <Route path="/trip-payment-details" component={TripPaymentDetails} />
-              <Route path="/trip-payment-status" component={TripPaymentStatus} />
-              <Route component={NotFound} />
-            </Switch>
-          </Router>
-        </TooltipProvider>
-      </QueryClientProvider>
-    );
-  }
-
-  // Fallback - should not reach here
+  // Show home page for everyone else (logged in users, guests, and users with modal auth)
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <AuthPage 
-          onAuthSuccess={handleAuthSuccess}
-          onGuideRegistration={handleGuideRegistration}
-        />
-      </TooltipProvider>
+      <AuthProvider>
+        <LanguageProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Router>
+              <Switch>
+                <Route path="/dashboard" component={() => 
+                  currentUser?.role === "user" ? (
+                    <UserDashboard user={currentUser} onLogout={handleLogout} />
+                  ) : (
+                    <Index onLoginClick={handleLoginClick} currentUser={currentUser} onLogout={handleLogout} />
+                  )
+                } />
+                <Route path="/" component={() => (
+                  <Index 
+                    onLoginClick={handleLoginClick} 
+                    currentUser={currentUser} 
+                    onLogout={handleLogout}
+                  />
+                )} />
+                <Route path="/booked-plans" component={BookedPlans} />
+                <Route path="/transactions" component={Transactions} />
+                <Route path="/transaction-details/:tripId" component={TransactionDetails} />
+                <Route path="/saved-places" component={SavedPlaces} />
+                <Route path="/trip-history" component={TripHistory} />
+                <Route path="/profile" component={Profile} />
+                <Route path="/settings" component={Settings} />
+                <Route path="/plan-generation" component={PlanGeneration} />
+                <Route path="/booking-flow" component={BookingFlow} />
+                <Route path="/booking-success" component={BookingSuccess} />
+                <Route path="/hotel-booking" component={HotelBooking} />
+                <Route path="/hotel-payment" component={HotelPayment} />
+                <Route path="/payment-status" component={PaymentStatus} />
+                <Route path="/hotel-booking-success" component={HotelBookingSuccess} />
+                <Route path="/trip-payment-summary" component={TripPaymentSummary} />
+                <Route path="/trip-payment-methods" component={TripPaymentMethods} />
+                <Route path="/trip-payment-details" component={TripPaymentDetails} />
+                <Route path="/trip-payment-status" component={TripPaymentStatus} />
+                <Route component={NotFound} />
+              </Switch>
+            </Router>
+
+            {/* Auth Modal */}
+            {showAuth && (
+              <AuthPageModal 
+                isOpen={showAuth}
+                onClose={handleAuthClose}
+                onAuthSuccess={handleAuthSuccess}
+                onGuideRegistration={handleGuideRegistration}
+              />
+            )}
+          </TooltipProvider>
+        </LanguageProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };
