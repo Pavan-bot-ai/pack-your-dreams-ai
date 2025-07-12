@@ -85,8 +85,28 @@ export const useAppState = () => {
     setShowAuth(false);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem("travelApp_token");
+      
+      if (token) {
+        await fetch("/api/auth/logout", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+      }
+    } catch (error) {
+      console.warn("Network error during logout:", error);
+    } finally {
+      // Always clear local storage and user state, regardless of server response
+      localStorage.removeItem("travelApp_token");
+      localStorage.removeItem("travelApp_currentUser");
+      // Force page reload to clear all state
+      window.location.reload();
+    }
   };
 
   const handlePlaceImageClick = (destination: string) => {

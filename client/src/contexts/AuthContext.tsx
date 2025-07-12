@@ -32,7 +32,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Check session on mount and refresh user data
   const refreshUser = async () => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('travelApp_token');
       if (!token) {
         setUser(null);
         setIsLoading(false);
@@ -57,12 +57,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         });
       } else {
         // Token invalid, clear it
-        localStorage.removeItem('authToken');
+        localStorage.removeItem('travelApp_token');
+        localStorage.removeItem('travelApp_currentUser');
         setUser(null);
       }
     } catch (error) {
       console.error('Error refreshing user:', error);
-      localStorage.removeItem('authToken');
+      localStorage.removeItem('travelApp_token');
+      localStorage.removeItem('travelApp_currentUser');
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -83,7 +85,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (response.ok) {
         const { token, user: userData } = await response.json();
-        localStorage.setItem('authToken', token);
+        localStorage.setItem('travelApp_token', token);
+        localStorage.setItem('travelApp_currentUser', JSON.stringify(userData));
         setUser(userData);
         return true;
       }
@@ -97,7 +100,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Logout function
   const logout = async () => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('travelApp_token');
       if (token) {
         await fetch('/api/auth/logout', {
           method: 'POST',
@@ -109,7 +112,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      localStorage.removeItem('authToken');
+      localStorage.removeItem('travelApp_token');
+      localStorage.removeItem('travelApp_currentUser');
       setUser(null);
     }
   };

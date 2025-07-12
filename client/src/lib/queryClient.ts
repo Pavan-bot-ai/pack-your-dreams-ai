@@ -4,7 +4,7 @@ const BASE_URL = import.meta.env.DEV ? '' : '';
 
 // Get auth token from localStorage
 const getAuthToken = () => {
-  return localStorage.getItem('authToken');
+  return localStorage.getItem('travelApp_token');
 };
 
 // API request function with authentication
@@ -81,11 +81,11 @@ export const queryClient = new QueryClient({
 
 // Auth utilities
 export const setAuthToken = (token: string) => {
-  localStorage.setItem('authToken', token);
+  localStorage.setItem('travelApp_token', token);
 };
 
 export const removeAuthToken = () => {
-  localStorage.removeItem('authToken');
+  localStorage.removeItem('travelApp_token');
 };
 
 export const isAuthError = (error: any): boolean => {
