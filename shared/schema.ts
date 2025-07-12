@@ -97,6 +97,66 @@ export const bookedPlans = pgTable("booked_plans", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Guide-specific tables
+export const tourRequests = pgTable("tour_requests", {
+  id: serial("id").primaryKey(),
+  guideId: integer("guide_id").notNull(),
+  travelerName: text("traveler_name").notNull(),
+  travelerEmail: text("traveler_email"),
+  destination: text("destination").notNull(),
+  date: text("date").notNull(),
+  duration: text("duration").notNull(),
+  travelers: integer("travelers").notNull(),
+  budget: text("budget").notNull(),
+  message: text("message"),
+  status: text("status").default("pending"), // pending, accepted, declined, completed
+  timeAgo: text("time_ago"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const guideTours = pgTable("guide_tours", {
+  id: serial("id").primaryKey(),
+  guideId: integer("guide_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  destination: text("destination").notNull(),
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  duration: text("duration").notNull(),
+  difficulty: text("difficulty").default("Easy"),
+  highlights: text("highlights").array(),
+  maxParticipants: integer("max_participants").default(10),
+  status: text("status").default("active"), // active, paused, completed
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const tourIdeas = pgTable("tour_ideas", {
+  id: serial("id").primaryKey(),
+  guideId: integer("guide_id").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  duration: text("duration"),
+  highlights: text("highlights").array(),
+  suggestedPrice: text("suggested_price"),
+  difficulty: text("difficulty").default("Easy to Moderate"),
+  prompt: text("prompt"), // Original AI prompt used
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const guideTransactions = pgTable("guide_transactions", {
+  id: serial("id").primaryKey(),
+  guideId: integer("guide_id").notNull(),
+  tourRequestId: integer("tour_request_id"),
+  client: text("client").notNull(),
+  service: text("service").notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").default("pending"), // pending, completed, failed
+  paymentMethod: text("payment_method"),
+  date: text("date").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   email: true,
@@ -173,6 +233,52 @@ export const insertBookedPlanSchema = createInsertSchema(bookedPlans).pick({
   duration: true,
 });
 
+export const insertTourRequestSchema = createInsertSchema(tourRequests).pick({
+  guideId: true,
+  travelerName: true,
+  travelerEmail: true,
+  destination: true,
+  date: true,
+  duration: true,
+  travelers: true,
+  budget: true,
+  message: true,
+  timeAgo: true,
+});
+
+export const insertGuideTourSchema = createInsertSchema(guideTours).pick({
+  guideId: true,
+  title: true,
+  description: true,
+  destination: true,
+  price: true,
+  duration: true,
+  difficulty: true,
+  highlights: true,
+  maxParticipants: true,
+});
+
+export const insertTourIdeaSchema = createInsertSchema(tourIdeas).pick({
+  guideId: true,
+  title: true,
+  description: true,
+  duration: true,
+  highlights: true,
+  suggestedPrice: true,
+  difficulty: true,
+  prompt: true,
+});
+
+export const insertGuideTransactionSchema = createInsertSchema(guideTransactions).pick({
+  guideId: true,
+  tourRequestId: true,
+  client: true,
+  service: true,
+  amount: true,
+  paymentMethod: true,
+  date: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpdateUserGuide = z.infer<typeof updateUserGuideSchema>;
 export type User = typeof users.$inferSelect;
@@ -184,3 +290,11 @@ export type InsertHotelBooking = z.infer<typeof insertHotelBookingSchema>;
 export type HotelBooking = typeof hotelBookings.$inferSelect;
 export type InsertBookedPlan = z.infer<typeof insertBookedPlanSchema>;
 export type BookedPlan = typeof bookedPlans.$inferSelect;
+export type InsertTourRequest = z.infer<typeof insertTourRequestSchema>;
+export type TourRequest = typeof tourRequests.$inferSelect;
+export type InsertGuideTour = z.infer<typeof insertGuideTourSchema>;
+export type GuideTour = typeof guideTours.$inferSelect;
+export type InsertTourIdea = z.infer<typeof insertTourIdeaSchema>;
+export type TourIdea = typeof tourIdeas.$inferSelect;
+export type InsertGuideTransaction = z.infer<typeof insertGuideTransactionSchema>;
+export type GuideTransaction = typeof guideTransactions.$inferSelect;

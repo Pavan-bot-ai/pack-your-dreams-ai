@@ -507,6 +507,337 @@ const GuideDashboard = ({ user, onLogout }: GuideDashboardProps) => {
                 </Card>
               </div>
             </TabsContent>
+
+            {/* Requests Tab */}
+            <TabsContent value="requests" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>New Tour Requests</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {newRequests.filter(req => req.status === "pending").length === 0 ? (
+                    <p className="text-gray-500 text-center py-8">No new requests at the moment.</p>
+                  ) : (
+                    newRequests.filter(req => req.status === "pending").map((request) => (
+                      <Card key={request.id} className="border-l-4 border-l-blue-500">
+                        <CardContent className="p-4">
+                          <div className="flex justify-between items-start mb-3">
+                            <div>
+                              <h4 className="font-semibold">{request.travelerName}</h4>
+                              <p className="text-sm text-gray-600">{request.destination}</p>
+                              <p className="text-xs text-gray-500">{request.timeAgo}</p>
+                            </div>
+                            <Badge variant="outline">{request.budget}</Badge>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3 text-sm">
+                            <div>
+                              <span className="text-gray-500">Date:</span>
+                              <p className="font-medium">{request.date}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Duration:</span>
+                              <p className="font-medium">{request.duration}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Travelers:</span>
+                              <p className="font-medium">{request.travelers}</p>
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Budget:</span>
+                              <p className="font-medium">{request.budget}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="mb-4">
+                            <span className="text-gray-500 text-sm">Message:</span>
+                            <p className="text-sm mt-1">{request.message}</p>
+                          </div>
+                          
+                          <div className="flex space-x-3">
+                            <Button 
+                              size="sm" 
+                              onClick={() => handleRequestAction(request.id, "accepted")}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              Accept
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleRequestAction(request.id, "declined")}
+                            >
+                              Decline
+                            </Button>
+                            <Button size="sm" variant="ghost">
+                              <MessageSquare className="h-4 w-4 mr-2" />
+                              Message
+                            </Button>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* My Tours Tab */}
+            <TabsContent value="tours" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <MapPin className="h-5 w-5" />
+                      Active Tours
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="p-4 border rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-semibold">Historic Paris Walking Tour</h4>
+                            <p className="text-sm text-gray-600">Montmartre & Sacré-Cœur</p>
+                            <p className="text-xs text-gray-500">Next: Today, 2:00 PM</p>
+                          </div>
+                          <Badge variant="default">Active</Badge>
+                        </div>
+                        <div className="mt-3 text-sm">
+                          <p><span className="text-gray-500">Duration:</span> 3 hours</p>
+                          <p><span className="text-gray-500">Price:</span> $85/person</p>
+                          <p><span className="text-gray-500">Max guests:</span> 8</p>
+                        </div>
+                      </div>
+                      
+                      <div className="p-4 border rounded-lg">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-semibold">Seine River Food Tour</h4>
+                            <p className="text-sm text-gray-600">Local Markets & Cafes</p>
+                            <p className="text-xs text-gray-500">Next: Tomorrow, 10:00 AM</p>
+                          </div>
+                          <Badge variant="default">Active</Badge>
+                        </div>
+                        <div className="mt-3 text-sm">
+                          <p><span className="text-gray-500">Duration:</span> 4 hours</p>
+                          <p><span className="text-gray-500">Price:</span> $120/person</p>
+                          <p><span className="text-gray-500">Max guests:</span> 6</p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Calendar className="h-5 w-5" />
+                      Upcoming Bookings
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-3">
+                      <div className="p-3 bg-blue-50 rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-medium">Sarah Johnson</p>
+                            <p className="text-sm text-gray-600">Historic Paris Walking Tour</p>
+                            <p className="text-xs text-gray-500">Today, 2:00 PM - 2 guests</p>
+                          </div>
+                          <Badge variant="outline">Confirmed</Badge>
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 bg-green-50 rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-medium">Mike Chen Family</p>
+                            <p className="text-sm text-gray-600">Seine River Food Tour</p>
+                            <p className="text-xs text-gray-500">Tomorrow, 10:00 AM - 4 guests</p>
+                          </div>
+                          <Badge variant="outline">Confirmed</Badge>
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 bg-yellow-50 rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="font-medium">Emma Rodriguez</p>
+                            <p className="text-sm text-gray-600">Custom Architecture Tour</p>
+                            <p className="text-xs text-gray-500">Jan 20, 3:00 PM - 3 guests</p>
+                          </div>
+                          <Badge variant="secondary">Pending</Badge>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* AI Ideas Tab */}
+            <TabsContent value="ai-ideas" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sparkles className="h-5 w-5" />
+                    AI Tour Idea Generator
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="idea-prompt">Enter a destination or theme for tour ideas</Label>
+                    <div className="flex space-x-2">
+                      <Input
+                        id="idea-prompt"
+                        placeholder="e.g., Historic Paris, Tokyo Food Culture, London Art Scene"
+                        value={ideaPrompt}
+                        onChange={(e) => setIdeaPrompt(e.target.value)}
+                      />
+                      <Button 
+                        onClick={generateTourIdea}
+                        disabled={isGenerating}
+                        className="bg-gradient-to-r from-purple-600 to-blue-600"
+                      >
+                        {isGenerating ? "Generating..." : "Generate"}
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {tourIdeas.length > 0 && (
+                    <div className="space-y-4 mt-6">
+                      <h4 className="font-semibold">Generated Tour Ideas</h4>
+                      {tourIdeas.map((idea) => (
+                        <Card key={idea.id} className="border-l-4 border-l-purple-500">
+                          <CardContent className="p-4">
+                            <h5 className="font-semibold mb-2">{idea.title}</h5>
+                            <p className="text-sm text-gray-600 mb-3">{idea.description}</p>
+                            
+                            <div className="grid grid-cols-3 gap-4 mb-3 text-sm">
+                              <div>
+                                <span className="text-gray-500">Duration:</span>
+                                <p className="font-medium">{idea.duration}</p>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Suggested Price:</span>
+                                <p className="font-medium">{idea.suggestedPrice}</p>
+                              </div>
+                              <div>
+                                <span className="text-gray-500">Difficulty:</span>
+                                <p className="font-medium">{idea.difficulty}</p>
+                              </div>
+                            </div>
+                            
+                            <div className="mb-3">
+                              <span className="text-gray-500 text-sm">Highlights:</span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {idea.highlights.map((highlight, index) => (
+                                  <Badge key={index} variant="secondary" className="text-xs">
+                                    {highlight}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </div>
+                            
+                            <Button size="sm" variant="outline">
+                              Save as Template
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Profile Tab */}
+            <TabsContent value="profile" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Guide Profile</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="font-semibold mb-3">Personal Information</h4>
+                      <div className="space-y-2 text-sm">
+                        <p><span className="text-gray-500">Name:</span> {user.name}</p>
+                        <p><span className="text-gray-500">Email:</span> {user.email}</p>
+                        <p><span className="text-gray-500">Phone:</span> {user.phone}</p>
+                        <p><span className="text-gray-500">Experience:</span> {user.experience}</p>
+                        {user.certification && (
+                          <p><span className="text-gray-500">Certification:</span> {user.certification}</p>
+                        )}
+                        {user.hourlyRate && (
+                          <p><span className="text-gray-500">Hourly Rate:</span> ${user.hourlyRate}</p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-semibold mb-3">Statistics</h4>
+                      <div className="space-y-2 text-sm">
+                        <p><span className="text-gray-500">Total Earnings:</span> ${earnings.total}</p>
+                        <p><span className="text-gray-500">Completed Tours:</span> {user.completedTours || 0}</p>
+                        <p><span className="text-gray-500">Rating:</span> {user.rating || "New Guide"}</p>
+                        <p><span className="text-gray-500">Total Reviews:</span> {user.totalReviews || 0}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="font-semibold mb-3">Bio</h4>
+                    <p className="text-sm text-gray-700">{user.bio}</p>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <h4 className="font-semibold mb-3 flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        Service Areas
+                      </h4>
+                      <div className="flex flex-wrap gap-1">
+                        {user.serviceAreas?.map((area: string, index: number) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {area}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-semibold mb-3 flex items-center gap-2">
+                        <Globe className="h-4 w-4" />
+                        Languages
+                      </h4>
+                      <div className="flex flex-wrap gap-1">
+                        {user.languages?.map((language: string, index: number) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {language}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-semibold mb-3 flex items-center gap-2">
+                        <Camera className="h-4 w-4" />
+                        Tour Interests
+                      </h4>
+                      <div className="flex flex-wrap gap-1">
+                        {user.tourInterests?.map((interest: string, index: number) => (
+                          <Badge key={index} variant="outline" className="text-xs">
+                            {interest}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
         );
     }
