@@ -8,7 +8,7 @@ export const users = pgTable("users", {
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   name: text("name").notNull(),
-  role: text("role").default("user"), // 'user' or 'guide'
+  role: text("role").default("user"), // 'user', 'guide', or 'admin'
   sessionToken: text("session_token"),
   sessionExpiry: timestamp("session_expiry"),
   language: text("language").default("en"),
@@ -298,3 +298,81 @@ export type InsertTourIdea = z.infer<typeof insertTourIdeaSchema>;
 export type TourIdea = typeof tourIdeas.$inferSelect;
 export type InsertGuideTransaction = z.infer<typeof insertGuideTransactionSchema>;
 export type GuideTransaction = typeof guideTransactions.$inferSelect;
+
+// Admin Analytics Tables
+export const adminAnalytics = pgTable("admin_analytics", {
+  id: serial("id").primaryKey(),
+  metricType: text("metric_type").notNull(), // daily_users, bookings, revenue, etc.
+  metricValue: decimal("metric_value", { precision: 15, scale: 2 }).notNull(),
+  metricData: text("metric_data"), // JSON string for additional data
+  recordDate: timestamp("record_date").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const adminFeedback = pgTable("admin_feedback", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id"),
+  userType: text("user_type").notNull(), // 'user', 'guide'
+  rating: integer("rating").notNull(), // 1-5 stars
+  category: text("category").notNull(), // 'booking', 'guide_service', 'platform', 'payment'
+  feedbackText: text("feedback_text"),
+  tripId: text("trip_id"),
+  guideId: integer("guide_id"),
+  status: text("status").default("pending"), // 'pending', 'reviewed', 'resolved'
+  adminNotes: text("admin_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const adminAiUsage = pgTable("admin_ai_usage", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id"),
+  serviceType: text("service_type").notNull(), // 'trip_planner', 'translator', 'guide_ideas'
+  requestType: text("request_type").notNull(), // 'generate_plan', 'translate', 'suggest_tours'
+  tokensUsed: integer("tokens_used").default(0),
+  responseTime: integer("response_time"), // in milliseconds
+  success: boolean("success").default(true),
+  errorMessage: text("error_message"),
+  requestData: text("request_data"), // JSON string
+  responseData: text("response_data"), // JSON string
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Admin Schema Exports
+export const insertAdminAnalyticsSchema = createInsertSchema(adminAnalytics).pick({
+  metricType: true,
+  metricValue: true,
+  metricData: true,
+  recordDate: true,
+});
+
+export const insertAdminFeedbackSchema = createInsertSchema(adminFeedback).pick({
+  userId: true,
+  userType: true,
+  rating: true,
+  category: true,
+  feedbackText: true,
+  tripId: true,
+  guideId: true,
+  status: true,
+  adminNotes: true,
+});
+
+export const insertAdminAiUsageSchema = createInsertSchema(adminAiUsage).pick({
+  userId: true,
+  serviceType: true,
+  requestType: true,
+  tokensUsed: true,
+  responseTime: true,
+  success: true,
+  errorMessage: true,
+  requestData: true,
+  responseData: true,
+});
+
+export type InsertAdminAnalytics = z.infer<typeof insertAdminAnalyticsSchema>;
+export type AdminAnalytics = typeof adminAnalytics.$inferSelect;
+export type InsertAdminFeedback = z.infer<typeof insertAdminFeedbackSchema>;
+export type AdminFeedback = typeof adminFeedback.$inferSelect;
+export type InsertAdminAiUsage = z.infer<typeof insertAdminAiUsageSchema>;
+export type AdminAiUsage = typeof adminAiUsage.$inferSelect;

@@ -1,4 +1,4 @@
-import { users, transactions, savedPlaces, hotelBookings, bookedPlans, tourRequests, guideTours, tourIdeas, guideTransactions, type User, type InsertUser, type UpdateUserGuide, type Transaction, type InsertTransaction, type SavedPlace, type InsertSavedPlace, type HotelBooking, type InsertHotelBooking, type BookedPlan, type InsertBookedPlan, type TourRequest, type InsertTourRequest, type GuideTour, type InsertGuideTour, type TourIdea, type InsertTourIdea, type GuideTransaction, type InsertGuideTransaction } from "@shared/schema";
+import { users, transactions, savedPlaces, hotelBookings, bookedPlans, tourRequests, guideTours, tourIdeas, guideTransactions, adminAnalytics, adminFeedback, adminAiUsage, type User, type InsertUser, type UpdateUserGuide, type Transaction, type InsertTransaction, type SavedPlace, type InsertSavedPlace, type HotelBooking, type InsertHotelBooking, type BookedPlan, type InsertBookedPlan, type TourRequest, type InsertTourRequest, type GuideTour, type InsertGuideTour, type TourIdea, type InsertTourIdea, type GuideTransaction, type InsertGuideTransaction, type AdminAnalytics, type InsertAdminAnalytics, type AdminFeedback, type InsertAdminFeedback, type AdminAiUsage, type InsertAdminAiUsage } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 
@@ -42,6 +42,24 @@ export interface IStorage {
   createTourIdea(idea: InsertTourIdea): Promise<TourIdea>;
   getGuideTransactionsByGuide(guideId: number): Promise<GuideTransaction[]>;
   createGuideTransaction(transaction: InsertGuideTransaction): Promise<GuideTransaction>;
+  
+  // Admin-specific methods
+  getAllUsers(): Promise<User[]>;
+  getAllTransactions(): Promise<Transaction[]>;
+  getAllHotelBookings(): Promise<HotelBooking[]>;
+  getAllBookedPlans(): Promise<BookedPlan[]>;
+  getUserStats(): Promise<any>;
+  getBookingStats(): Promise<any>;
+  getRevenueStats(): Promise<any>;
+  createAdminAnalytics(analytics: InsertAdminAnalytics): Promise<AdminAnalytics>;
+  getAdminAnalytics(metricType?: string): Promise<AdminAnalytics[]>;
+  createAdminFeedback(feedback: InsertAdminFeedback): Promise<AdminFeedback>;
+  getAllAdminFeedback(): Promise<AdminFeedback[]>;
+  updateAdminFeedbackStatus(id: number, status: string, adminNotes?: string): Promise<AdminFeedback | undefined>;
+  createAdminAiUsage(usage: InsertAdminAiUsage): Promise<AdminAiUsage>;
+  getAdminAiUsage(): Promise<AdminAiUsage[]>;
+  getTourRequestsForAdmin(): Promise<TourRequest[]>;
+  getGuideToursForAdmin(): Promise<GuideTour[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -294,6 +312,128 @@ export class DatabaseStorage implements IStorage {
       .values(insertTransaction)
       .returning();
     return transaction;
+  }
+
+  // Admin-specific methods implementation
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users).orderBy(users.createdAt);
+  }
+
+  async getAllTransactions(): Promise<Transaction[]> {
+    return await db.select().from(transactions).orderBy(transactions.createdAt);
+  }
+
+  async getAllHotelBookings(): Promise<HotelBooking[]> {
+    return await db.select().from(hotelBookings).orderBy(hotelBookings.createdAt);
+  }
+
+  async getAllBookedPlans(): Promise<BookedPlan[]> {
+    return await db.select().from(bookedPlans).orderBy(bookedPlans.createdAt);
+  }
+
+  async getUserStats(): Promise<any> {
+    const totalUsers = await db.select({ count: users.id }).from(users);
+    const activeUsers = await db.select({ count: users.id }).from(users).where(eq(users.lastActiveAt, new Date()));
+    const guides = await db.select({ count: users.id }).from(users).where(eq(users.role, 'guide'));
+    const regularUsers = await db.select({ count: users.id }).from(users).where(eq(users.role, 'user'));
+    
+    return {
+      totalUsers: totalUsers.length,
+      activeUsers: activeUsers.length,
+      guides: guides.length,
+      regularUsers: regularUsers.length
+    };
+  }
+
+  async getBookingStats(): Promise<any> {
+    const totalBookings = await db.select({ count: hotelBookings.id }).from(hotelBookings);
+    const confirmedBookings = await db.select({ count: hotelBookings.id }).from(hotelBookings).where(eq(hotelBookings.bookingStatus, 'confirmed'));
+    const pendingBookings = await db.select({ count: hotelBookings.id }).from(hotelBookings).where(eq(hotelBookings.bookingStatus, 'pending'));
+    const totalPlans = await db.select({ count: bookedPlans.id }).from(bookedPlans);
+    
+    return {
+      totalBookings: totalBookings.length,
+      confirmedBookings: confirmedBookings.length,
+      pendingBookings: pendingBookings.length,
+      totalPlans: totalPlans.length
+    };
+  }
+
+  async getRevenueStats(): Promise<any> {
+    const transactionData = await db.select().from(transactions);
+    const hotelBookingData = await db.select().from(hotelBookings);
+    const guideTransactionData = await db.select().from(guideTransactions);
+    
+    const totalTransactionRevenue = transactionData.reduce((sum, t) => sum + parseFloat(t.amount), 0);
+    const totalHotelRevenue = hotelBookingData.reduce((sum, h) => sum + (h.totalAmount / 100), 0);
+    const totalGuideRevenue = guideTransactionData.reduce((sum, g) => sum + parseFloat(g.amount), 0);
+    
+    return {
+      totalRevenue: totalTransactionRevenue + totalHotelRevenue + totalGuideRevenue,
+      transactionRevenue: totalTransactionRevenue,
+      hotelRevenue: totalHotelRevenue,
+      guideRevenue: totalGuideRevenue
+    };
+  }
+
+  async createAdminAnalytics(insertAnalytics: InsertAdminAnalytics): Promise<AdminAnalytics> {
+    const [analytics] = await db
+      .insert(adminAnalytics)
+      .values(insertAnalytics)
+      .returning();
+    return analytics;
+  }
+
+  async getAdminAnalytics(metricType?: string): Promise<AdminAnalytics[]> {
+    if (metricType) {
+      return await db.select().from(adminAnalytics).where(eq(adminAnalytics.metricType, metricType)).orderBy(adminAnalytics.recordDate);
+    }
+    return await db.select().from(adminAnalytics).orderBy(adminAnalytics.recordDate);
+  }
+
+  async createAdminFeedback(insertFeedback: InsertAdminFeedback): Promise<AdminFeedback> {
+    const [feedback] = await db
+      .insert(adminFeedback)
+      .values(insertFeedback)
+      .returning();
+    return feedback;
+  }
+
+  async getAllAdminFeedback(): Promise<AdminFeedback[]> {
+    return await db.select().from(adminFeedback).orderBy(adminFeedback.createdAt);
+  }
+
+  async updateAdminFeedbackStatus(id: number, status: string, adminNotes?: string): Promise<AdminFeedback | undefined> {
+    const [feedback] = await db
+      .update(adminFeedback)
+      .set({ 
+        status,
+        adminNotes: adminNotes || null,
+        updatedAt: new Date()
+      })
+      .where(eq(adminFeedback.id, id))
+      .returning();
+    return feedback || undefined;
+  }
+
+  async createAdminAiUsage(insertUsage: InsertAdminAiUsage): Promise<AdminAiUsage> {
+    const [usage] = await db
+      .insert(adminAiUsage)
+      .values(insertUsage)
+      .returning();
+    return usage;
+  }
+
+  async getAdminAiUsage(): Promise<AdminAiUsage[]> {
+    return await db.select().from(adminAiUsage).orderBy(adminAiUsage.createdAt);
+  }
+
+  async getTourRequestsForAdmin(): Promise<TourRequest[]> {
+    return await db.select().from(tourRequests).orderBy(tourRequests.createdAt);
+  }
+
+  async getGuideToursForAdmin(): Promise<GuideTour[]> {
+    return await db.select().from(guideTours).orderBy(guideTours.createdAt);
   }
 }
 

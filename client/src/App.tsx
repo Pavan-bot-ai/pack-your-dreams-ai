@@ -13,6 +13,7 @@ import AuthPageModal from "./components/AuthPageModal";
 import GuideRegistration from "./pages/GuideRegistration";
 import UserDashboard from "./pages/UserDashboard";
 import GuideDashboard from "./pages/GuideDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 
 // Existing Components
 import Index from "./pages/Index";
@@ -161,6 +162,19 @@ const App = () => {
     );
   }
 
+  // Show Admin Dashboard for admin users
+  if (currentUser?.role === "admin") {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <AdminDashboard user={currentUser} onLogout={handleLogout} />
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+  }
+
   // Show home page for everyone else (logged in users, guests, and users with modal auth)
   return (
     <QueryClientProvider client={queryClient}>
@@ -203,6 +217,13 @@ const App = () => {
                 <Route path="/trip-payment-methods" component={TripPaymentMethods} />
                 <Route path="/trip-payment-details" component={TripPaymentDetails} />
                 <Route path="/trip-payment-status" component={TripPaymentStatus} />
+                <Route path="/admin" component={() => 
+                  currentUser?.role === "admin" ? (
+                    <AdminDashboard user={currentUser} onLogout={handleLogout} />
+                  ) : (
+                    <Index onLoginClick={handleLoginClick} currentUser={currentUser} onLogout={handleLogout} />
+                  )
+                } />
                 <Route component={NotFound} />
               </Switch>
             </Router>

@@ -32,6 +32,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return crypto.randomBytes(32).toString('hex');
   };
 
+  // Admin authentication middleware
+  const adminAuth = async (req: any, res: any, next: any) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      return res.sendStatus(401);
+    }
+
+    try {
+      const user = await storage.getUserBySessionToken(token);
+      if (!user || user.role !== 'admin') {
+        return res.sendStatus(403);
+      }
+      req.user = user;
+      next();
+    } catch (error) {
+      return res.sendStatus(403);
+    }
+  };
+
   // New unified authentication routes
   app.post("/api/auth/signup", async (req, res) => {
     try {
@@ -495,6 +516,151 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(plan);
     } catch (error: any) {
       res.status(500).json({ error: error.message });
+    }
+  });
+
+  // Admin Dashboard API Routes
+  app.get("/api/admin/stats", adminAuth, async (req, res) => {
+    try {
+      const userStats = await storage.getUserStats();
+      const bookingStats = await storage.getBookingStats();
+      const revenueStats = await storage.getRevenueStats();
+
+      res.json({
+        userStats,
+        bookingStats,
+        revenueStats
+      });
+    } catch (error: any) {
+      console.error("Error fetching admin stats:", error);
+      res.status(500).json({ error: "Failed to fetch admin stats" });
+    }
+  });
+
+  app.get("/api/admin/users", adminAuth, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error: any) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ error: "Failed to fetch users" });
+    }
+  });
+
+  app.get("/api/admin/bookings", adminAuth, async (req, res) => {
+    try {
+      const hotelBookings = await storage.getAllHotelBookings();
+      const bookedPlans = await storage.getAllBookedPlans();
+      
+      // Combine both types of bookings
+      const allBookings = [
+        ...hotelBookings.map(booking => ({ ...booking, type: 'hotel' })),
+        ...bookedPlans.map(plan => ({ ...plan, type: 'plan' }))
+      ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      res.json(hotelBookings); // For now, just return hotel bookings as they have more complete structure
+    } catch (error: any) {
+      console.error("Error fetching bookings:", error);
+      res.status(500).json({ error: "Failed to fetch bookings" });
+    }
+  });
+
+  app.get("/api/admin/feedback", adminAuth, async (req, res) => {
+    try {
+      const feedback = await storage.getAllAdminFeedback();
+      res.json(feedback);
+    } catch (error: any) {
+      console.error("Error fetching feedback:", error);
+      res.status(500).json({ error: "Failed to fetch feedback" });
+    }
+  });
+
+  app.put("/api/admin/feedback/:id", adminAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status, adminNotes } = req.body;
+      
+      const updatedFeedback = await storage.updateAdminFeedbackStatus(
+        parseInt(id), 
+        status, 
+        adminNotes
+      );
+
+      if (!updatedFeedback) {
+        return res.status(404).json({ error: "Feedback not found" });
+      }
+
+      res.json(updatedFeedback);
+    } catch (error: any) {
+      console.error("Error updating feedback:", error);
+      res.status(500).json({ error: "Failed to update feedback" });
+    }
+  });
+
+  app.get("/api/admin/ai-usage", adminAuth, async (req, res) => {
+    try {
+      const aiUsage = await storage.getAdminAiUsage();
+      res.json(aiUsage);
+    } catch (error: any) {
+      console.error("Error fetching AI usage:", error);
+      res.status(500).json({ error: "Failed to fetch AI usage" });
+    }
+  });
+
+  app.get("/api/admin/tour-requests", adminAuth, async (req, res) => {
+    try {
+      const tourRequests = await storage.getTourRequestsForAdmin();
+      res.json(tourRequests);
+    } catch (error: any) {
+      console.error("Error fetching tour requests:", error);
+      res.status(500).json({ error: "Failed to fetch tour requests" });
+    }
+  });
+
+  app.post("/api/admin/feedback", authenticateToken, async (req, res) => {
+    try {
+      const { rating, category, feedbackText, tripId, guideId } = req.body;
+      const userId = req.user.id;
+      const userType = req.user.role;
+
+      const feedback = await storage.createAdminFeedback({
+        userId,
+        userType,
+        rating,
+        category,
+        feedbackText,
+        tripId,
+        guideId
+      });
+
+      res.json(feedback);
+    } catch (error: any) {
+      console.error("Error creating feedback:", error);
+      res.status(500).json({ error: "Failed to create feedback" });
+    }
+  });
+
+  app.post("/api/admin/ai-usage", authenticateToken, async (req, res) => {
+    try {
+      const { serviceType, requestType, tokensUsed, responseTime, success, errorMessage, requestData, responseData } = req.body;
+      const userId = req.user.id;
+
+      const usage = await storage.createAdminAiUsage({
+        userId,
+        serviceType,
+        requestType,
+        tokensUsed,
+        responseTime,
+        success,
+        errorMessage,
+        requestData,
+        responseData
+      });
+
+      res.json(usage);
+    } catch (error: any) {
+      console.error("Error recording AI usage:", error);
+      res.status(500).json({ error: "Failed to record AI usage" });
     }
   });
 
