@@ -209,7 +209,7 @@ const TransportPayment = ({ amount, onPaymentComplete, bookingDetails }: Transpo
               <p className="text-sm text-gray-600">{bookingDetails.description || 'Transport booking'}</p>
             </div>
             <Badge variant="secondary" className="text-lg font-bold">
-              ₹{amount}
+              ${amount}
             </Badge>
           </div>
         </CardContent>
@@ -282,7 +282,7 @@ const TransportPayment = ({ amount, onPaymentComplete, bookingDetails }: Transpo
                 <p className="text-sm text-gray-600">Payment Method: {selectedMethodData?.name}</p>
               </div>
               <Badge variant="secondary" className="text-lg font-bold">
-                ₹{amount}
+                ${amount}
               </Badge>
             </div>
           </CardContent>
@@ -421,7 +421,7 @@ const TransportPayment = ({ amount, onPaymentComplete, bookingDetails }: Transpo
           className="w-full bg-green-600 hover:bg-green-700"
           disabled={isProcessing}
         >
-          {isProcessing ? 'Processing...' : `Pay ₹${amount}`}
+          {isProcessing ? 'Processing...' : `Pay $${amount}`}
         </Button>
       </div>
     );
@@ -452,7 +452,7 @@ const TransportPayment = ({ amount, onPaymentComplete, bookingDetails }: Transpo
           </div>
           <div className="flex justify-between items-center">
             <span className="font-medium">Amount:</span>
-            <span className="font-bold">₹{amount}</span>
+            <span className="font-bold">${amount}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="font-medium">Payment Method:</span>
