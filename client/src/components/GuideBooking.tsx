@@ -70,10 +70,7 @@ export function GuideBooking({ onClose }: { onClose: () => void }) {
   // Create booking mutation
   const createBookingMutation = useMutation({
     mutationFn: (data: GuideBookingRequest) => 
-      apiRequest('/api/guide-bookings', {
-        method: 'POST',
-        body: JSON.stringify(data)
-      }),
+      apiRequest('POST', '/api/guide-bookings', data),
     onSuccess: (response) => {
       toast({
         title: "Booking Request Sent!",
