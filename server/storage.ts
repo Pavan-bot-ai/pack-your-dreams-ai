@@ -681,7 +681,24 @@ export class MemStorage implements IStorage {
       sessionToken: null,
       sessionExpiry: null,
       language: "en",
-      lastActiveAt: new Date()
+      lastActiveAt: new Date(),
+      isRegistrationComplete: true,
+      bio: null,
+      phone: null,
+      experience: null,
+      certification: null,
+      hourlyRate: null,
+      serviceAreas: null,
+      languages: null,
+      tourInterests: null,
+      profileImageUrl: null,
+      rating: "0",
+      totalReviews: 0,
+      totalEarnings: "0",
+      completedTours: 0,
+      profileCompleted: false,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     this.users.set(id, user);
     return user;
@@ -869,6 +886,192 @@ export class MemStorage implements IStorage {
     }
     return undefined;
   }
+
+  // Implement all missing methods from IStorage interface
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(user => user.email === email);
+  }
+
+  async updateUserGuideProfile(id: number, guideData: UpdateUserGuide): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (user) {
+      const updatedUser = { ...user, ...guideData, updatedAt: new Date() };
+      this.users.set(id, updatedUser);
+      return updatedUser;
+    }
+    return undefined;
+  }
+
+  // Guide-specific methods (returning empty arrays/undefined for MemStorage)
+  async getTourRequestsByGuide(guideId: number): Promise<TourRequest[]> { return []; }
+  async createTourRequest(request: InsertTourRequest): Promise<TourRequest> { 
+    return { 
+      ...request, 
+      id: 1, 
+      status: "pending", 
+      message: request.message || null,
+      travelerEmail: request.travelerEmail || null,
+      timeAgo: request.timeAgo || null,
+      createdAt: new Date(), 
+      updatedAt: new Date() 
+    }; 
+  }
+  async updateTourRequestStatus(id: number, status: string): Promise<TourRequest | undefined> { return undefined; }
+  async getGuideToursByGuide(guideId: number): Promise<GuideTour[]> { return []; }
+  async createGuideTour(tour: InsertGuideTour): Promise<GuideTour> { 
+    return { 
+      ...tour, 
+      id: 1, 
+      status: "active", 
+      description: tour.description || null,
+      difficulty: tour.difficulty || null,
+      highlights: tour.highlights || null,
+      maxParticipants: tour.maxParticipants || null,
+      createdAt: new Date(), 
+      updatedAt: new Date() 
+    }; 
+  }
+  async getTourIdeasByGuide(guideId: number): Promise<TourIdea[]> { return []; }
+  async createTourIdea(idea: InsertTourIdea): Promise<TourIdea> { 
+    return { 
+      ...idea, 
+      id: 1, 
+      duration: idea.duration || null,
+      description: idea.description || null,
+      difficulty: idea.difficulty || null,
+      highlights: idea.highlights || null,
+      suggestedPrice: idea.suggestedPrice || null,
+      prompt: idea.prompt || null,
+      createdAt: new Date() 
+    }; 
+  }
+  async getGuideTransactionsByGuide(guideId: number): Promise<GuideTransaction[]> { return []; }
+  async createGuideTransaction(transaction: InsertGuideTransaction): Promise<GuideTransaction> { 
+    return { 
+      ...transaction, 
+      id: 1, 
+      status: "completed",
+      paymentMethod: transaction.paymentMethod || null,
+      tourRequestId: transaction.tourRequestId || null,
+      createdAt: new Date() 
+    }; 
+  }
+
+  // Admin-specific methods
+  async getAllUsers(): Promise<User[]> { return Array.from(this.users.values()); }
+  async getAllTransactions(): Promise<Transaction[]> { return Array.from(this.transactions.values()); }
+  async getAllHotelBookings(): Promise<HotelBooking[]> { return Array.from(this.hotelBookings.values()); }
+  async getAllBookedPlans(): Promise<BookedPlan[]> { return Array.from(this.bookedPlans.values()); }
+  async getUserStats(): Promise<any> { return { totalUsers: this.users.size }; }
+  async getBookingStats(): Promise<any> { return { totalBookings: this.hotelBookings.size }; }
+  async getRevenueStats(): Promise<any> { return { totalRevenue: 0 }; }
+  async createAdminAnalytics(analytics: InsertAdminAnalytics): Promise<AdminAnalytics> { 
+    return { 
+      ...analytics, 
+      id: 1, 
+      metricData: analytics.metricData || null,
+      recordDate: analytics.recordDate || new Date(),
+      createdAt: new Date() 
+    }; 
+  }
+  async getAdminAnalytics(metricType?: string): Promise<AdminAnalytics[]> { return []; }
+  async createAdminFeedback(feedback: InsertAdminFeedback): Promise<AdminFeedback> { 
+    return { 
+      ...feedback, 
+      id: 1, 
+      status: feedback.status || "pending", 
+      userId: feedback.userId || null,
+      guideId: feedback.guideId || null,
+      feedbackText: feedback.feedbackText || null,
+      tripId: feedback.tripId || null,
+      adminNotes: feedback.adminNotes || null,
+      createdAt: new Date(), 
+      updatedAt: new Date() 
+    }; 
+  }
+  async getAllAdminFeedback(): Promise<AdminFeedback[]> { return []; }
+  async updateAdminFeedbackStatus(id: number, status: string, adminNotes?: string): Promise<AdminFeedback | undefined> { return undefined; }
+  async createAdminAiUsage(usage: InsertAdminAiUsage): Promise<AdminAiUsage> { 
+    return { 
+      ...usage, 
+      id: 1, 
+      userId: usage.userId || null,
+      tokensUsed: usage.tokensUsed || null,
+      responseTime: usage.responseTime || null,
+      success: usage.success || null,
+      errorMessage: usage.errorMessage || null,
+      requestData: usage.requestData || null,
+      responseData: usage.responseData || null,
+      createdAt: new Date() 
+    }; 
+  }
+  async getAdminAiUsage(): Promise<AdminAiUsage[]> { return []; }
+  async getTourRequestsForAdmin(): Promise<TourRequest[]> { return []; }
+  async getGuideToursForAdmin(): Promise<GuideTour[]> { return []; }
+
+  // Guide booking and messaging methods
+  async createGuideBooking(booking: InsertGuideBooking): Promise<GuideBooking> { 
+    return { 
+      ...booking, 
+      id: 1, 
+      status: "pending", 
+      totalAmount: booking.totalAmount || null,
+      specialRequests: booking.specialRequests || null,
+      createdAt: new Date(), 
+      updatedAt: new Date() 
+    }; 
+  }
+  async getGuideBookingsByUser(userId: number): Promise<GuideBooking[]> { return []; }
+  async getGuideBookingsByGuide(guideId: number): Promise<GuideBooking[]> { return []; }
+  async updateGuideBookingStatus(id: number, status: string): Promise<GuideBooking | undefined> { return undefined; }
+  async getGuideBookingById(id: number): Promise<GuideBooking | undefined> { return undefined; }
+  
+  async createGuideMessage(message: InsertGuideMessage): Promise<GuideMessage> { 
+    return { 
+      ...message, 
+      id: 1, 
+      messageType: message.messageType || null,
+      isRead: false,
+      createdAt: new Date() 
+    }; 
+  }
+  async getMessagesByBooking(bookingId: number): Promise<GuideMessage[]> { return []; }
+  async markMessagesAsRead(bookingId: number, userId: number): Promise<void> { }
+  
+  async createGuideNotification(notification: InsertGuideNotification): Promise<GuideNotification> { 
+    return { 
+      ...notification, 
+      id: 1, 
+      isRead: false,
+      relatedId: notification.relatedId || null,
+      createdAt: new Date() 
+    }; 
+  }
+  async getNotificationsByUser(userId: number): Promise<GuideNotification[]> { return []; }
+  async markNotificationAsRead(id: number): Promise<void> { }
+  async getAvailableGuides(): Promise<User[]> { 
+    return Array.from(this.users.values()).filter(user => user.role === 'guide'); 
+  }
+  
+  // User notification methods
+  async createUserNotification(notification: InsertUserNotification): Promise<UserNotification> { 
+    return { 
+      ...notification, 
+      id: 1, 
+      isRead: false,
+      relatedId: notification.relatedId || null,
+      createdAt: new Date() 
+    }; 
+  }
+  async getUserNotifications(userId: number): Promise<UserNotification[]> { return []; }
+  async markUserNotificationAsRead(id: number): Promise<void> { }
+  
+  // Transport booking methods
+  async createTransportBooking(booking: InsertTransportBooking): Promise<TransportBooking> { 
+    return { ...booking, id: 1, paymentStatus: booking.paymentStatus || "successful", bookingStatus: booking.bookingStatus || "confirmed", createdAt: new Date(), updatedAt: new Date() }; 
+  }
+  async getTransportBookingsByUser(userId: number): Promise<TransportBooking[]> { return []; }
+  async getTransportBookingById(id: number): Promise<TransportBooking | undefined> { return undefined; }
 }
 
 export const storage = new DatabaseStorage();

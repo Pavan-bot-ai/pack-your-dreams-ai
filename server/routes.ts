@@ -850,10 +850,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Transport booking routes
-  app.post("/api/transport-bookings", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.sendStatus(401);
-    }
+  app.post("/api/transport-bookings", authenticateToken, async (req, res) => {
 
     try {
       const { bookingType, serviceDetails, amount, paymentMethod, paymentDetails } = req.body;
