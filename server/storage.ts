@@ -1,4 +1,4 @@
-import { users, transactions, savedPlaces, hotelBookings, bookedPlans, type User, type InsertUser, type UpdateUserGuide, type Transaction, type InsertTransaction, type SavedPlace, type InsertSavedPlace, type HotelBooking, type InsertHotelBooking, type BookedPlan, type InsertBookedPlan } from "@shared/schema";
+import { users, transactions, savedPlaces, hotelBookings, bookedPlans, tourRequests, guideTours, tourIdeas, guideTransactions, type User, type InsertUser, type UpdateUserGuide, type Transaction, type InsertTransaction, type SavedPlace, type InsertSavedPlace, type HotelBooking, type InsertHotelBooking, type BookedPlan, type InsertBookedPlan, type TourRequest, type InsertTourRequest, type GuideTour, type InsertGuideTour, type TourIdea, type InsertTourIdea, type GuideTransaction, type InsertGuideTransaction } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
 
@@ -31,6 +31,17 @@ export interface IStorage {
   getBookedPlansByUser(userId: number): Promise<BookedPlan[]>;
   getBookedPlanById(id: number): Promise<BookedPlan | undefined>;
   updateBookedPlanStatus(id: number, status: string): Promise<BookedPlan | undefined>;
+  
+  // Guide-specific methods
+  getTourRequestsByGuide(guideId: number): Promise<TourRequest[]>;
+  createTourRequest(request: InsertTourRequest): Promise<TourRequest>;
+  updateTourRequestStatus(id: number, status: string): Promise<TourRequest | undefined>;
+  getGuideToursByGuide(guideId: number): Promise<GuideTour[]>;
+  createGuideTour(tour: InsertGuideTour): Promise<GuideTour>;
+  getTourIdeasByGuide(guideId: number): Promise<TourIdea[]>;
+  createTourIdea(idea: InsertTourIdea): Promise<TourIdea>;
+  getGuideTransactionsByGuide(guideId: number): Promise<GuideTransaction[]>;
+  createGuideTransaction(transaction: InsertGuideTransaction): Promise<GuideTransaction>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -222,6 +233,67 @@ export class DatabaseStorage implements IStorage {
       .where(eq(bookedPlans.id, id))
       .returning();
     return plan;
+  }
+
+  // Guide-specific methods implementation
+  async getTourRequestsByGuide(guideId: number): Promise<TourRequest[]> {
+    return await db.select().from(tourRequests).where(eq(tourRequests.guideId, guideId));
+  }
+
+  async createTourRequest(insertRequest: InsertTourRequest): Promise<TourRequest> {
+    const [request] = await db
+      .insert(tourRequests)
+      .values(insertRequest)
+      .returning();
+    return request;
+  }
+
+  async updateTourRequestStatus(id: number, status: string): Promise<TourRequest | undefined> {
+    const [request] = await db
+      .update(tourRequests)
+      .set({ 
+        status,
+        updatedAt: new Date()
+      })
+      .where(eq(tourRequests.id, id))
+      .returning();
+    return request || undefined;
+  }
+
+  async getGuideToursByGuide(guideId: number): Promise<GuideTour[]> {
+    return await db.select().from(guideTours).where(eq(guideTours.guideId, guideId));
+  }
+
+  async createGuideTour(insertTour: InsertGuideTour): Promise<GuideTour> {
+    const [tour] = await db
+      .insert(guideTours)
+      .values(insertTour)
+      .returning();
+    return tour;
+  }
+
+  async getTourIdeasByGuide(guideId: number): Promise<TourIdea[]> {
+    return await db.select().from(tourIdeas).where(eq(tourIdeas.guideId, guideId));
+  }
+
+  async createTourIdea(insertIdea: InsertTourIdea): Promise<TourIdea> {
+    const [idea] = await db
+      .insert(tourIdeas)
+      .values(insertIdea)
+      .returning();
+    return idea;
+  }
+
+  async getGuideTransactionsByGuide(guideId: number): Promise<GuideTransaction[]> {
+    return await db.select().from(guideTransactions).where(eq(guideTransactions.guideId, guideId));
+  }
+
+  async createGuideTransaction(insertTransaction: InsertGuideTransaction): Promise<GuideTransaction> {
+    const [transaction] = await db
+      .insert(guideTransactions)
+      .values(insertTransaction)
+      .returning();
+    return transaction;
   }
 }
 
