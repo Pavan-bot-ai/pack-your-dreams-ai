@@ -98,6 +98,9 @@ export interface IStorage {
   
   // Admin-specific methods
   getAllUsers(): Promise<User[]>;
+  getUserById(id: number): Promise<User | undefined>;
+  updateUser(id: number, userData: any): Promise<User | undefined>;
+  deleteUser(id: number): Promise<void>;
   getAllTransactions(): Promise<Transaction[]>;
   getAllHotelBookings(): Promise<HotelBooking[]>;
   getAllBookedPlans(): Promise<BookedPlan[]>;
@@ -396,6 +399,27 @@ export class DatabaseStorage implements IStorage {
   // Admin-specific methods implementation
   async getAllUsers(): Promise<User[]> {
     return await db.select().from(users).orderBy(users.createdAt);
+  }
+
+  async getUserById(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async updateUser(id: number, userData: any): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ 
+        ...userData,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  async deleteUser(id: number): Promise<void> {
+    await db.delete(users).where(eq(users.id, id));
   }
 
   async getAllTransactions(): Promise<Transaction[]> {

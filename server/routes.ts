@@ -744,6 +744,127 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/admin/users/:id", adminAuthMiddleware, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUserById(userId);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+      res.json(user);
+    } catch (error) {
+      console.error("Admin get user error:", error);
+      res.status(500).json({ error: "Failed to fetch user" });
+    }
+  });
+
+  app.post("/api/admin/users", adminAuthMiddleware, async (req, res) => {
+    try {
+      const { username, email, role, status, password } = req.body;
+      
+      if (!username || !email || !password) {
+        return res.status(400).json({ error: "Username, email, and password are required" });
+      }
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ error: "User with this email already exists" });
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+      
+      const userData = {
+        username,
+        name: username,
+        email,
+        password: hashedPassword,
+        role: role || 'user',
+        status: status || 'active'
+      };
+
+      const newUser = await storage.createUser(userData);
+      res.status(201).json(newUser);
+    } catch (error) {
+      console.error("Admin create user error:", error);
+      res.status(500).json({ error: "Failed to create user" });
+    }
+  });
+
+  app.put("/api/admin/users/:id", adminAuthMiddleware, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { username, email, role, status, password } = req.body;
+      
+      const existingUser = await storage.getUserById(userId);
+      if (!existingUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const updateData: any = {
+        username,
+        name: username,
+        email,
+        role,
+        status
+      };
+
+      // Only update password if provided
+      if (password) {
+        updateData.password = await bcrypt.hash(password, 10);
+      }
+
+      const updatedUser = await storage.updateUser(userId, updateData);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Admin update user error:", error);
+      res.status(500).json({ error: "Failed to update user" });
+    }
+  });
+
+  app.post("/api/admin/users/:id/suspend", adminAuthMiddleware, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { reason, fromDate, toDate } = req.body;
+      
+      const existingUser = await storage.getUserById(userId);
+      if (!existingUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      // Update user status to suspended
+      const updatedUser = await storage.updateUser(userId, { 
+        status: 'suspended',
+        suspensionReason: reason,
+        suspensionFromDate: fromDate,
+        suspensionToDate: toDate
+      });
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Admin suspend user error:", error);
+      res.status(500).json({ error: "Failed to suspend user" });
+    }
+  });
+
+  app.delete("/api/admin/users/:id", adminAuthMiddleware, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      const existingUser = await storage.getUserById(userId);
+      if (!existingUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      await storage.deleteUser(userId);
+      res.json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("Admin delete user error:", error);
+      res.status(500).json({ error: "Failed to delete user" });
+    }
+  });
+
   app.get("/api/admin/bookings", adminAuthMiddleware, async (req, res) => {
     try {
       const bookings = await storage.getAllHotelBookings();

@@ -156,34 +156,67 @@ async function loadUsersData() {
             headers: { 'Authorization': `Bearer ${adminToken}` }
         });
         const users = await response.json();
-        
-        const tbody = document.getElementById('usersTableBody');
-        tbody.innerHTML = users.map(user => `
-            <tr class="border-b hover:bg-gray-50">
-                <td class="py-3">${user.name || user.username}</td>
-                <td class="py-3">${user.email}</td>
-                <td class="py-3">
-                    <span class="px-2 py-1 rounded-full text-xs ${user.role === 'guide' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}">
-                        ${user.role || 'user'}
-                    </span>
-                </td>
-                <td class="py-3">${new Date(user.createdAt).toLocaleDateString()}</td>
-                <td class="py-3">
-                    <span class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-800">Active</span>
-                </td>
-                <td class="py-3">
-                    <button onclick="viewUser(${user.id})" class="text-blue-600 hover:text-blue-800 mr-2">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <button onclick="editUser(${user.id})" class="text-yellow-600 hover:text-yellow-800">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                </td>
-            </tr>
-        `).join('');
+        window.allUsers = users; // Store for filtering
+        displayUsers(users);
     } catch (error) {
         console.error('Error loading users data:', error);
     }
+}
+
+function displayUsers(users) {
+    const tbody = document.getElementById('usersTableBody');
+    tbody.innerHTML = users.map(user => `
+        <tr class="border-b hover:bg-gray-50">
+            <td class="py-3">${user.id}</td>
+            <td class="py-3">${user.name || user.username || 'N/A'}</td>
+            <td class="py-3">${user.email || 'N/A'}</td>
+            <td class="py-3">
+                <span class="px-2 py-1 rounded-full text-xs ${user.role === 'guide' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}">
+                    ${user.role || 'user'}
+                </span>
+            </td>
+            <td class="py-3">
+                <span class="px-2 py-1 rounded-full text-xs ${getStatusColor(user.status || 'active')}">
+                    ${user.status || 'active'}
+                </span>
+            </td>
+            <td class="py-3">${new Date(user.createdAt || Date.now()).toLocaleDateString()}</td>
+            <td class="py-3">
+                <div class="flex space-x-2">
+                    <button onclick="editUser(${user.id})" class="px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="showSuspendModal(${user.id})" class="px-3 py-1 bg-yellow-500 text-white rounded text-xs hover:bg-yellow-600 transition">
+                        <i class="fas fa-ban"></i>
+                    </button>
+                    <button onclick="deleteUser(${user.id})" class="px-3 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function filterUsers(role) {
+    const users = window.allUsers || [];
+    let filteredUsers = users;
+    
+    if (role !== 'all') {
+        filteredUsers = users.filter(user => user.role === role);
+    }
+    
+    displayUsers(filteredUsers);
+    
+    // Update button states
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('bg-blue-500', 'text-white');
+        btn.classList.add('bg-gray-300', 'text-gray-700');
+    });
+    
+    const clickedButton = event.target;
+    clickedButton.classList.remove('bg-gray-300', 'text-gray-700');
+    clickedButton.classList.add('bg-blue-500', 'text-white');
 }
 
 async function loadBookingsData() {
@@ -498,12 +531,173 @@ function viewUser(userId) {
     alert(`View user details for ID: ${userId}`);
 }
 
+// User Management Functions
+function showAddUserModal() {
+    document.getElementById('userModalTitle').textContent = 'Add New User';
+    document.getElementById('userId').value = '';
+    document.getElementById('userForm').reset();
+    document.getElementById('passwordField').style.display = 'block';
+    document.getElementById('userPassword').required = true;
+    document.getElementById('userModal').classList.remove('hidden');
+}
+
+function hideUserModal() {
+    document.getElementById('userModal').classList.add('hidden');
+}
+
 function editUser(userId) {
-    alert(`Edit user for ID: ${userId}`);
+    // Fetch user data and populate the edit form
+    fetch(`/api/admin/users/${userId}`, {
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+        }
+    })
+    .then(response => response.json())
+    .then(user => {
+        document.getElementById('userModalTitle').textContent = 'Edit User';
+        document.getElementById('userId').value = userId;
+        document.getElementById('userUsername').value = user.username || user.name || '';
+        document.getElementById('userEmail').value = user.email || '';
+        document.getElementById('userRole').value = user.role || 'user';
+        document.getElementById('userStatus').value = user.status || 'active';
+        document.getElementById('userPassword').value = '';
+        document.getElementById('userPassword').required = false;
+        document.getElementById('userModal').classList.remove('hidden');
+    })
+    .catch(error => {
+        console.error('Error fetching user:', error);
+        alert('Error loading user data');
+    });
+}
+
+async function saveUser(event) {
+    event.preventDefault();
+    
+    const userId = document.getElementById('userId').value;
+    const userData = {
+        username: document.getElementById('userUsername').value,
+        email: document.getElementById('userEmail').value,
+        role: document.getElementById('userRole').value,
+        status: document.getElementById('userStatus').value
+    };
+    
+    const password = document.getElementById('userPassword').value;
+    if (password) {
+        userData.password = password;
+    }
+    
+    try {
+        const url = userId ? `/api/admin/users/${userId}` : '/api/admin/users';
+        const method = userId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+            },
+            body: JSON.stringify(userData)
+        });
+        
+        if (response.ok) {
+            hideUserModal();
+            await loadUsersData();
+            alert(userId ? 'User updated successfully!' : 'User created successfully!');
+        } else {
+            const error = await response.json();
+            alert('Error: ' + (error.message || 'Failed to save user'));
+        }
+    } catch (error) {
+        console.error('Error saving user:', error);
+        alert('Error saving user');
+    }
+}
+
+function showSuspendModal(userId) {
+    document.getElementById('suspendUserId').value = userId;
+    document.getElementById('suspendForm').reset();
+    
+    // Set default dates
+    const today = new Date();
+    const nextWeek = new Date(today);
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    
+    document.getElementById('suspendFromDate').value = today.toISOString().split('T')[0];
+    document.getElementById('suspendToDate').value = nextWeek.toISOString().split('T')[0];
+    
+    document.getElementById('suspendModal').classList.remove('hidden');
+}
+
+function hideSuspendModal() {
+    document.getElementById('suspendModal').classList.add('hidden');
+}
+
+async function suspendUser(event) {
+    event.preventDefault();
+    
+    const userId = document.getElementById('suspendUserId').value;
+    const suspensionData = {
+        reason: document.getElementById('suspendReason').value,
+        fromDate: document.getElementById('suspendFromDate').value,
+        toDate: document.getElementById('suspendToDate').value,
+        status: 'suspended'
+    };
+    
+    try {
+        const response = await fetch(`/api/admin/users/${userId}/suspend`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+            },
+            body: JSON.stringify(suspensionData)
+        });
+        
+        if (response.ok) {
+            hideSuspendModal();
+            await loadUsersData();
+            alert('User suspended successfully!');
+        } else {
+            const error = await response.json();
+            alert('Error: ' + (error.message || 'Failed to suspend user'));
+        }
+    } catch (error) {
+        console.error('Error suspending user:', error);
+        alert('Error suspending user');
+    }
+}
+
+async function deleteUser(userId) {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/admin/users/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
+            }
+        });
+        
+        if (response.ok) {
+            await loadUsersData();
+            alert('User deleted successfully!');
+        } else {
+            const error = await response.json();
+            alert('Error: ' + (error.message || 'Failed to delete user'));
+        }
+    } catch (error) {
+        console.error('Error deleting user:', error);
+        alert('Error deleting user');
+    }
 }
 
 function getStatusColor(status) {
     switch(status) {
+        case 'active': return 'bg-green-100 text-green-800';
+        case 'suspended': return 'bg-red-100 text-red-800';
+        case 'inactive': return 'bg-gray-100 text-gray-800';
         case 'pending': return 'bg-yellow-100 text-yellow-800';
         case 'accepted': return 'bg-green-100 text-green-800';
         case 'rejected': return 'bg-red-100 text-red-800';

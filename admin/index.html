@@ -326,6 +326,82 @@
         </div>
     </div>
 
+    <!-- Add/Edit User Modal -->
+    <div id="userModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-8 w-96 card-shadow max-h-screen overflow-y-auto">
+            <h2 id="userModalTitle" class="text-2xl font-bold mb-6 text-center text-gray-800">Add New User</h2>
+            <form id="userForm" onsubmit="saveUser(event)">
+                <input type="hidden" id="userId" value="">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Username</label>
+                    <input type="text" id="userUsername" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Email</label>
+                    <input type="email" id="userEmail" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Role</label>
+                    <select id="userRole" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                        <option value="user">User</option>
+                        <option value="guide">Guide</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Status</label>
+                    <select id="userStatus" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                        <option value="active">Active</option>
+                        <option value="suspended">Suspended</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div id="passwordField" class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Password</label>
+                    <input type="password" id="userPassword" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                    <small class="text-gray-500">Leave blank to keep current password (for editing)</small>
+                </div>
+                <div class="flex space-x-4">
+                    <button type="submit" class="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 transition">
+                        <i class="fas fa-save mr-2"></i>Save
+                    </button>
+                    <button type="button" onclick="hideUserModal()" class="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition">
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Suspend User Modal -->
+    <div id="suspendModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-8 w-96 card-shadow">
+            <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Suspend User</h2>
+            <form id="suspendForm" onsubmit="suspendUser(event)">
+                <input type="hidden" id="suspendUserId" value="">
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Reason for Suspension</label>
+                    <textarea id="suspendReason" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500" rows="3" placeholder="Enter reason for suspension..."></textarea>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Suspension Start Date</label>
+                    <input type="date" id="suspendFromDate" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Suspension End Date</label>
+                    <input type="date" id="suspendToDate" required class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-blue-500">
+                </div>
+                <div class="flex space-x-4">
+                    <button type="submit" class="flex-1 bg-red-500 text-white py-2 rounded-lg hover:bg-red-600 transition">
+                        <i class="fas fa-ban mr-2"></i>Suspend
+                    </button>
+                    <button type="button" onclick="hideSuspendModal()" class="flex-1 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition">
+                        <i class="fas fa-times mr-2"></i>Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="/admin/script.js"></script>
 </body>
 </html>
