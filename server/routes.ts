@@ -56,14 +56,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create username from email
       const username = email.split('@')[0];
       
-      // Create user
+      // Create user with basic profile filled
       const user = await storage.createUser({ 
         username,
         email, 
         password: hashedPassword,
         name,
         role,
-        isRegistrationComplete: role === "user" // Users complete registration immediately, guides need more steps
+        isRegistrationComplete: role === "user", // Users complete registration immediately, guides need more steps
+        countryOfResidence: "Not specified",
+        travelStyle: "Explorer",
+        travelFrequency: "Occasionally",
+        preferredDestinations: [],
+        dietaryPreferences: []
       });
       
       // Generate session token
@@ -81,7 +86,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: user.name,
           role: user.role,
           isRegistrationComplete: user.isRegistrationComplete,
-          language: user.language 
+          language: user.language,
+          countryOfResidence: user.countryOfResidence,
+          travelStyle: user.travelStyle,
+          travelFrequency: user.travelFrequency,
+          preferredDestinations: user.preferredDestinations,
+          dietaryPreferences: user.dietaryPreferences,
+          phone: user.phone,
+          dateOfBirth: user.dateOfBirth,
+          passportCountry: user.passportCountry,
+          emergencyContact: user.emergencyContact,
+          profileCompletionPromptShown: user.profileCompletionPromptShown,
+          createdAt: user.createdAt,
+          lastActiveAt: user.lastActiveAt
         } 
       });
     } catch (error: any) {
@@ -127,7 +144,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: user.name,
           role: user.role,
           isRegistrationComplete: user.isRegistrationComplete,
-          language: user.language 
+          language: user.language,
+          countryOfResidence: user.countryOfResidence,
+          travelStyle: user.travelStyle,
+          travelFrequency: user.travelFrequency,
+          preferredDestinations: user.preferredDestinations,
+          dietaryPreferences: user.dietaryPreferences,
+          phone: user.phone,
+          dateOfBirth: user.dateOfBirth,
+          passportCountry: user.passportCountry,
+          emergencyContact: user.emergencyContact,
+          profileCompletionPromptShown: user.profileCompletionPromptShown,
+          createdAt: user.createdAt,
+          lastActiveAt: user.lastActiveAt
         } 
       });
     } catch (error: any) {

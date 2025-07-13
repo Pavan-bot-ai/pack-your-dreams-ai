@@ -63,10 +63,7 @@ export default function ProfileEdit() {
   const onSubmit = async (data: ProfileCompletion) => {
     setIsSubmitting(true);
     try {
-      await apiRequest('/api/auth/complete-profile', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+      await apiRequest('POST', '/api/auth/complete-profile', data);
       
       await refreshUser();
       

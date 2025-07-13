@@ -5,13 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, User, Mail, Phone, MapPin, Heart, Plane, Edit, Calendar, Utensils, Globe } from "lucide-react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
-import { ProfileCompletionBadge } from "@/components/ProfileCompletionBadge";
-import { useProfileCompletion } from "@/hooks/useProfileCompletion";
+
 
 const Profile = () => {
   const [, setLocation] = useLocation();
-  const { user } = useAuth();
-  const { isProfileIncomplete } = useProfileCompletion();
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   const formatArray = (arr: string[] | null) => {
     if (!arr || arr.length === 0) return "Not specified";
@@ -35,9 +33,7 @@ const Profile = () => {
             <h1 className="text-2xl font-bold text-gray-900">Profile</h1>
           </div>
           <div className="flex items-center gap-3">
-            {isProfileIncomplete && (
-              <ProfileCompletionBadge onClick={() => setLocation('/profile/edit')} />
-            )}
+
             <Button
               onClick={() => setLocation('/profile/edit')}
               className="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700"
@@ -49,7 +45,12 @@ const Profile = () => {
         </div>
 
         {/* Content */}
-        {!user ? (
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+            <div className="text-gray-500 text-lg">Loading profile...</div>
+          </div>
+        ) : !isAuthenticated || !user ? (
           <div className="text-center py-12">
             <User className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <div className="text-gray-500 text-lg mb-2">Please sign in to view your profile</div>

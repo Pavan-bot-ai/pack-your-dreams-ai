@@ -6,7 +6,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { LanguageProvider } from "./contexts/LanguageContext";
-import { ProfileCompletionWrapper } from "./components/ProfileCompletionWrapper";
+
 import { Router, Route, Switch } from "wouter";
 
 // Auth Components
@@ -124,10 +124,9 @@ const AppContent = ({ showAuth, setShowAuth, showGuideRegistration, setShowGuide
 
   // Show home page for everyone else (logged in users, guests, and users with modal auth)
   return (
-    <ProfileCompletionWrapper>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
         <Router>
         <Switch>
           <Route path="/dashboard" component={() => 
@@ -183,8 +182,7 @@ const AppContent = ({ showAuth, setShowAuth, showGuideRegistration, setShowGuide
           onGuideRegistration={handleGuideRegistration}
         />
       )}
-      </TooltipProvider>
-    </ProfileCompletionWrapper>
+    </TooltipProvider>
   );
 };
 
