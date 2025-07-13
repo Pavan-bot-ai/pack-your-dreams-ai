@@ -24,6 +24,7 @@ import TransactionDetails from "./pages/TransactionDetails";
 import SavedPlaces from "./pages/SavedPlaces";
 import TripHistory from "./pages/TripHistory";
 import Profile from "./pages/Profile";
+import ProfileEdit from "./pages/ProfileEdit";
 import Settings from "./pages/Settings";
 import PlanGeneration from "./pages/PlanGeneration";
 import BookingFlow from "./pages/BookingFlow";
@@ -211,6 +212,7 @@ const App = () => {
                 <Route path="/saved-places" component={SavedPlaces} />
                 <Route path="/trip-history" component={TripHistory} />
                 <Route path="/profile" component={Profile} />
+                <Route path="/profile/edit" component={ProfileEdit} />
                 <Route path="/settings" component={Settings} />
                 <Route path="/plan-generation" component={PlanGeneration} />
                 <Route path="/booking-flow" component={BookingFlow} />

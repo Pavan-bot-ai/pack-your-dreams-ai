@@ -15,9 +15,20 @@ export const users = pgTable("users", {
   lastActiveAt: timestamp("last_active_at").defaultNow(),
   isRegistrationComplete: boolean("is_registration_complete").default(true),
   
+  // Profile completion fields  
+  phone: text("phone"),
+  dateOfBirth: text("date_of_birth"),
+  countryOfResidence: text("country_of_residence"),
+  preferredDestinations: text("preferred_destinations").array(),
+  travelStyle: text("travel_style"), // adventure, relaxation, cultural, etc.
+  travelFrequency: text("travel_frequency"), // rarely, occasionally, frequently, etc.
+  passportCountry: text("passport_country"),
+  emergencyContact: text("emergency_contact"),
+  dietaryPreferences: text("dietary_preferences").array(),
+  profileCompletionPromptShown: boolean("profile_completion_prompt_shown").default(false),
+  
   // Guide-specific fields
   bio: text("bio"),
-  phone: text("phone"),
   experience: text("experience"),
   certification: text("certification"),
   hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }),
@@ -187,6 +198,28 @@ export const insertUserSchema = createInsertSchema(users).pick({
   role: z.enum(["user", "guide"]).default("user"),
 });
 
+export const profileCompletionSchema = createInsertSchema(users).pick({
+  phone: true,
+  dateOfBirth: true,
+  countryOfResidence: true,
+  preferredDestinations: true,
+  travelStyle: true,
+  travelFrequency: true,
+  passportCountry: true,
+  emergencyContact: true,
+  dietaryPreferences: true,
+}).extend({
+  phone: z.string().optional(),
+  dateOfBirth: z.string().optional(),
+  countryOfResidence: z.string().optional(),
+  preferredDestinations: z.array(z.string()).optional(),
+  travelStyle: z.string().optional(),
+  travelFrequency: z.string().optional(),
+  passportCountry: z.string().optional(),
+  emergencyContact: z.string().optional(),
+  dietaryPreferences: z.array(z.string()).optional(),
+});
+
 export const updateUserGuideSchema = createInsertSchema(users).pick({
   bio: true,
   phone: true,
@@ -301,6 +334,7 @@ export const insertGuideTransactionSchema = createInsertSchema(guideTransactions
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpdateUserGuide = z.infer<typeof updateUserGuideSchema>;
+export type ProfileCompletion = z.infer<typeof profileCompletionSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;

@@ -45,8 +45,7 @@ const BookedPlans = () => {
   const [selectedPlan, setSelectedPlan] = useState<BookedPlan | null>(null);
   const [, setLocation] = useLocation();
 
-  // Debug logging
-  console.log('BookedPlans auth state:', { user, isAuthenticated, authLoading });
+
 
   const { data: bookedPlans = [], isLoading, error } = useQuery({
     queryKey: ['/api/booked-plans'],

@@ -18,6 +18,7 @@ import {
   type User, 
   type InsertUser, 
   type UpdateUserGuide, 
+  type ProfileCompletion,
   type Transaction, 
   type InsertTransaction, 
   type SavedPlace, 
@@ -65,6 +66,7 @@ export interface IStorage {
   getUserBySessionToken(token: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUserGuideProfile(id: number, guideData: UpdateUserGuide): Promise<User | undefined>;
+  updateUserProfile(id: number, profileData: Partial<ProfileCompletion & { profileCompletionPromptShown?: boolean }>): Promise<User | undefined>;
   updateUserSession(id: number, sessionToken: string, expiryDate: Date): Promise<User | undefined>;
   updateUserLanguage(id: number, language: string): Promise<User | undefined>;
   updateUserActivity(id: number): Promise<void>;
@@ -166,6 +168,18 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({ 
         ...guideData,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  async updateUserProfile(id: number, profileData: Partial<ProfileCompletion & { profileCompletionPromptShown?: boolean }>): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ 
+        ...profileData,
         updatedAt: new Date()
       })
       .where(eq(users.id, id))
@@ -722,8 +736,19 @@ export class MemStorage implements IStorage {
       language: "en",
       lastActiveAt: new Date(),
       isRegistrationComplete: true,
-      bio: null,
+      // Profile completion fields
       phone: null,
+      dateOfBirth: null,
+      countryOfResidence: null,
+      preferredDestinations: null,
+      travelStyle: null,
+      travelFrequency: null,
+      passportCountry: null,
+      emergencyContact: null,
+      dietaryPreferences: null,
+      profileCompletionPromptShown: false,
+      // Guide-specific fields
+      bio: null,
       experience: null,
       certification: null,
       hourlyRate: null,
@@ -935,6 +960,16 @@ export class MemStorage implements IStorage {
     const user = this.users.get(id);
     if (user) {
       const updatedUser = { ...user, ...guideData, updatedAt: new Date() };
+      this.users.set(id, updatedUser);
+      return updatedUser;
+    }
+    return undefined;
+  }
+
+  async updateUserProfile(id: number, profileData: Partial<ProfileCompletion & { profileCompletionPromptShown?: boolean }>): Promise<User | undefined> {
+    const user = this.users.get(id);
+    if (user) {
+      const updatedUser = { ...user, ...profileData, updatedAt: new Date() };
       this.users.set(id, updatedUser);
       return updatedUser;
     }

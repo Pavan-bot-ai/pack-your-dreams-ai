@@ -148,6 +148,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Profile completion routes
+  app.post("/api/auth/complete-profile", authenticateToken, async (req: any, res) => {
+    try {
+      const profileData = req.body;
+      
+      const updatedUser = await storage.updateUserProfile(req.user.id, {
+        ...profileData,
+        profileCompletionPromptShown: true
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json({
+        user: updatedUser
+      });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/auth/mark-prompt-shown", authenticateToken, async (req: any, res) => {
+    try {
+      const updatedUser = await storage.updateUserProfile(req.user.id, {
+        profileCompletionPromptShown: true
+      });
+
+      if (!updatedUser) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      res.json({ message: "Prompt marked as shown" });
+    } catch (error: any) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+
   // Guide profile completion route
   app.post("/api/auth/complete-guide-profile", authenticateToken, async (req: any, res) => {
     try {
