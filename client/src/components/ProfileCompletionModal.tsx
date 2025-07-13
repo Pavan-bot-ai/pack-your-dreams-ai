@@ -4,11 +4,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { profileCompletionSchema, type ProfileCompletion } from "@shared/schema";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { User, MapPin, Heart, Plane, X } from "lucide-react";
+import { User, MapPin, Heart, Plane, Phone, Save, Calendar } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -34,7 +35,8 @@ const POPULAR_DESTINATIONS = [
   "Paris, France", "Tokyo, Japan", "New York, USA", "London, UK", 
   "Rome, Italy", "Barcelona, Spain", "Amsterdam, Netherlands", 
   "Bangkok, Thailand", "Sydney, Australia", "Dubai, UAE",
-  "Bali, Indonesia", "Santorini, Greece", "Iceland", "Morocco"
+  "Bali, Indonesia", "Santorini, Greece", "Iceland", "Morocco",
+  "Costa Rica", "Peru", "Vietnam", "Portugal", "Croatia", "Turkey"
 ];
 
 interface ProfileCompletionModalProps {
@@ -51,25 +53,30 @@ export const ProfileCompletionModal = ({ isOpen, onClose, onComplete }: ProfileC
   const form = useForm<ProfileCompletion>({
     resolver: zodResolver(profileCompletionSchema),
     defaultValues: {
-      phone: "",
-      dateOfBirth: "",
-      countryOfResidence: "",
-      preferredDestinations: [],
-      travelStyle: "",
-      travelFrequency: "",
-      passportCountry: "",
-      emergencyContact: "",
-      dietaryPreferences: [],
+      phone: user?.phone || "",
+      dateOfBirth: user?.dateOfBirth || "",
+      countryOfResidence: user?.countryOfResidence || "",
+      preferredDestinations: user?.preferredDestinations || [],
+      travelStyle: user?.travelStyle || "",
+      travelFrequency: user?.travelFrequency || "",
+      passportCountry: user?.passportCountry || "",
+      emergencyContact: user?.emergencyContact || "",
+      dietaryPreferences: user?.dietaryPreferences || [],
     },
   });
 
   const onSubmit = async (data: ProfileCompletion) => {
     setIsSubmitting(true);
     try {
-      await apiRequest('POST', '/api/auth/complete-profile', data);
+      await apiRequest('/api/auth/complete-profile', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      });
       
       // Mark that the prompt has been shown
-      await apiRequest('POST', '/api/auth/mark-prompt-shown');
+      await apiRequest('/api/auth/mark-prompt-shown', {
+        method: 'POST',
+      });
       
       await refreshUser();
       
@@ -93,46 +100,50 @@ export const ProfileCompletionModal = ({ isOpen, onClose, onComplete }: ProfileC
 
   const handleMaybeLater = async () => {
     try {
-      await apiRequest('POST', '/api/auth/mark-prompt-shown');
-      await refreshUser();
+      await apiRequest('/api/auth/mark-prompt-shown', {
+        method: 'POST',
+      });
       onClose();
     } catch (error) {
       console.error('Error marking prompt as shown:', error);
+      onClose(); // Close anyway
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader className="relative">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute -top-2 -right-2 h-8 w-8 p-0"
-            onClick={handleMaybeLater}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
-              <User className="w-6 h-6 text-white" />
+        <DialogHeader>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg">
+              <User className="w-7 h-7 text-white" />
             </div>
             <div>
-              <DialogTitle className="text-2xl">Tell Us About Yourself!</DialogTitle>
-              <DialogDescription className="text-base mt-1">
-                Help us personalize your travel experience by completing your profile
+              <DialogTitle className="text-3xl font-bold text-gray-900 mb-2">Complete Your Profile</DialogTitle>
+              <DialogDescription className="text-lg text-gray-600">
+                Help us personalize your travel experience with your preferences
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
+
+        <Card className="shadow-xl">
+          <CardHeader className="text-center border-b">
+            <CardTitle className="text-2xl text-gray-900">Personal & Travel Information</CardTitle>
+            <CardDescription className="text-base text-gray-600">
+              Complete your profile to get personalized travel recommendations
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="p-6">
         
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             {/* Contact Information */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-blue-500" />
-                Basic Information
+                <Phone className="w-5 h-5 text-blue-500" />
+                Contact Information
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -141,7 +152,7 @@ export const ProfileCompletionModal = ({ isOpen, onClose, onComplete }: ProfileC
                   name="phone"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Phone Number (Optional)</FormLabel>
+                      <FormLabel>Phone Number</FormLabel>
                       <FormControl>
                         <Input placeholder="+1 (555) 123-4567" {...field} />
                       </FormControl>
@@ -152,10 +163,62 @@ export const ProfileCompletionModal = ({ isOpen, onClose, onComplete }: ProfileC
                 
                 <FormField
                   control={form.control}
+                  name="dateOfBirth"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Date of Birth</FormLabel>
+                      <FormControl>
+                        <Input type="date" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="emergencyContact"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Emergency Contact</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Name and phone number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Location Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-green-500" />
+                Location Information
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
                   name="countryOfResidence"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Country of Residence</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g., United States" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="passportCountry"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Passport Country</FormLabel>
                       <FormControl>
                         <Input placeholder="e.g., United States" {...field} />
                       </FormControl>
@@ -229,7 +292,7 @@ export const ProfileCompletionModal = ({ isOpen, onClose, onComplete }: ProfileC
                   <FormItem>
                     <FormLabel className="flex items-center gap-2">
                       <Heart className="w-4 h-4 text-red-500" />
-                      Destinations You Love (Optional - Select any that interest you)
+                      Preferred Destinations (Select multiple)
                     </FormLabel>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-32 overflow-y-auto p-2 border rounded-md">
                       {POPULAR_DESTINATIONS.map((destination) => (
@@ -259,6 +322,42 @@ export const ProfileCompletionModal = ({ isOpen, onClose, onComplete }: ProfileC
                   </FormItem>
                 )}
               />
+
+              {/* Dietary Preferences */}
+              <FormField
+                control={form.control}
+                name="dietaryPreferences"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Dietary Preferences</FormLabel>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {DIETARY_PREFERENCES.map((preference) => (
+                        <div key={preference} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={preference}
+                            checked={field.value?.includes(preference)}
+                            onCheckedChange={(checked) => {
+                              const currentValues = field.value || [];
+                              if (checked) {
+                                field.onChange([...currentValues, preference]);
+                              } else {
+                                field.onChange(currentValues.filter(v => v !== preference));
+                              }
+                            }}
+                          />
+                          <label 
+                            htmlFor={preference} 
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            {preference}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Action Buttons */}
@@ -268,19 +367,24 @@ export const ProfileCompletionModal = ({ isOpen, onClose, onComplete }: ProfileC
                 variant="outline"
                 onClick={handleMaybeLater}
                 disabled={isSubmitting}
+                className="px-8 py-3 text-gray-600 hover:text-gray-800"
               >
                 Maybe Later
               </Button>
+              
               <Button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 px-8"
+                className="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 px-8 py-3"
               >
+                <Save className="w-4 h-4 mr-2" />
                 {isSubmitting ? "Saving..." : "Complete Profile"}
               </Button>
             </div>
           </form>
         </Form>
+          </CardContent>
+        </Card>
       </DialogContent>
     </Dialog>
   );
