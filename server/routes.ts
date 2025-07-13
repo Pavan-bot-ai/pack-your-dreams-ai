@@ -1156,11 +1156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get("/api/transport-bookings", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.sendStatus(401);
-    }
-
+  app.get("/api/transport-bookings", authenticateToken, async (req, res) => {
     try {
       const bookings = await storage.getTransportBookingsByUser(req.user.id);
       res.json(bookings);
