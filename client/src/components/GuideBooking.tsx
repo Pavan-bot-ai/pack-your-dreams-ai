@@ -83,11 +83,12 @@ export function GuideBooking({ onClose }: { onClose: () => void }) {
       queryClient.invalidateQueries({ queryKey: ['/api/guide-bookings/user'] });
       setStep(3); // Go to bookings view instead of messaging
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Booking request error:", error);
+      const errorMessage = error?.message || "Failed to send booking request. Please try again.";
       toast({
         title: "Error",
-        description: "Failed to send booking request. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -105,7 +106,14 @@ export function GuideBooking({ onClose }: { onClose: () => void }) {
   }
 
   const handleBookingSubmit = () => {
-    if (!selectedGuide || !user) return;
+    if (!selectedGuide || !user) {
+      toast({
+        title: "Error",
+        description: "Please select a guide and ensure you're logged in.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     // Validate required fields
     if (!bookingData.destination || !bookingData.date || !bookingData.time) {
@@ -122,13 +130,16 @@ export function GuideBooking({ onClose }: { onClose: () => void }) {
       destination: bookingData.destination,
       date: bookingData.date,
       time: bookingData.time,
-      duration: bookingData.duration!,
-      travelers: bookingData.travelers!,
-      budget: bookingData.budget!,
-      specialRequests: bookingData.specialRequests
+      duration: bookingData.duration || "2-3 hours",
+      travelers: bookingData.travelers || 1,
+      budget: bookingData.budget || "50-100",
+      specialRequests: bookingData.specialRequests || ""
     };
 
     console.log("Submitting booking request:", request);
+    console.log("Selected guide:", selectedGuide);
+    console.log("User:", user);
+    
     createBookingMutation.mutate(request);
   };
 
@@ -193,8 +204,11 @@ export function GuideBooking({ onClose }: { onClose: () => void }) {
               id="travelers"
               type="number"
               min="1"
-              value={bookingData.travelers}
-              onChange={(e) => setBookingData({...bookingData, travelers: parseInt(e.target.value)})}
+              value={bookingData.travelers || 1}
+              onChange={(e) => {
+                const value = parseInt(e.target.value) || 1;
+                setBookingData({...bookingData, travelers: value});
+              }}
             />
           </div>
         </div>
