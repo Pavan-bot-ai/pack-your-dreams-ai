@@ -185,11 +185,11 @@ const BookedPlans = () => {
             <Button 
               variant="outline" 
               size="sm"
-              onClick={() => setLocation('/dashboard')}
+              onClick={() => setLocation('/')}
               className="flex items-center gap-2 hover:bg-blue-50"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Dashboard
+              Back to Menu
             </Button>
           </div>
           
