@@ -41,13 +41,16 @@ interface BookedPlan {
 }
 
 const BookedPlans = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [selectedPlan, setSelectedPlan] = useState<BookedPlan | null>(null);
   const [, setLocation] = useLocation();
 
+  // Debug logging
+  console.log('BookedPlans auth state:', { user, isAuthenticated, authLoading });
+
   const { data: bookedPlans = [], isLoading, error } = useQuery({
     queryKey: ['/api/booked-plans'],
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && !authLoading,
   });
 
   const formatCurrency = (amount: number) => {
@@ -149,7 +152,20 @@ const BookedPlans = () => {
     }
   };
 
-  if (!isAuthenticated) {
+  // Show loading while auth is being checked
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center p-4">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-lg text-gray-600">Checking authentication...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Show sign in prompt only after auth check is complete and user is not authenticated
+  if (!authLoading && !isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center p-4">
         <Card className="max-w-md w-full">
@@ -160,11 +176,20 @@ const BookedPlans = () => {
               You need to be signed in to view your booked plans
             </CardDescription>
           </CardHeader>
+          <CardContent className="text-center">
+            <Button 
+              onClick={() => setLocation('/')}
+              className="bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700"
+            >
+              Go to Sign In
+            </Button>
+          </CardContent>
         </Card>
       </div>
     );
   }
 
+  // Show loading while data is being fetched
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-cyan-50 flex items-center justify-center p-4">
