@@ -5,8 +5,7 @@ import HeroSection from "@/components/HeroSection";
 import QuickActionsSection from "@/components/QuickActionsSection";
 import VideoReelsSection from "@/components/VideoReelsSection";
 import ModalManager from "@/components/ModalManager";
-import { ProfileCompletionModal } from "@/components/ProfileCompletionModal";
-import { useProfileCompletion } from "@/hooks/useProfileCompletion";
+
 
 interface IndexProps {
   onLoginClick?: () => void;
@@ -50,7 +49,7 @@ const Index = ({ onLoginClick, currentUser, onLogout }: IndexProps = {}) => {
     handleGeneratePlanFromDetails,
   } = useAppState();
 
-  const { showProfileModal, handleCloseModal, handleCompleteProfile } = useProfileCompletion();
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50">
@@ -96,11 +95,7 @@ const Index = ({ onLoginClick, currentUser, onLogout }: IndexProps = {}) => {
         onGeneratePlan={handleGeneratePlanFromDetails}
       />
 
-      <ProfileCompletionModal
-        isOpen={showProfileModal}
-        onClose={handleCloseModal}
-        onComplete={handleCompleteProfile}
-      />
+
     </div>
   );
 };

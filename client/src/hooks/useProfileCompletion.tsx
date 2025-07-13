@@ -17,8 +17,9 @@ export const useProfileCompletion = () => {
       user.travelFrequency
     ];
     
-    const hasBasicInfo = basicFields.some(field => field && field.length > 0);
-    return !hasBasicInfo;
+    // Profile is incomplete if ANY of the basic fields are missing
+    const hasAllBasicInfo = basicFields.every(field => field && field.length > 0);
+    return !hasAllBasicInfo;
   };
 
   const shouldShowProfilePrompt = (user: any) => {
