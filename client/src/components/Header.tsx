@@ -16,12 +16,13 @@ const Header = ({ isLoggedIn, onMenuItemClick, onAuthClick, onLogout }: HeaderPr
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
         <div className="flex items-center space-x-2">
           <HamburgerMenu isLoggedIn={isLoggedIn} onMenuItemClick={onMenuItemClick} />
-          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
-            <Plane className="w-6 h-6 text-white" />
+          <div className="flex items-center">
+            <img 
+              src="/pack-ur-bags-logo.png" 
+              alt="Pack ur Bags Logo" 
+              className="h-12 w-auto"
+            />
           </div>
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-            Pack Your Bags
-          </h1>
         </div>
         
         <div className="flex items-center space-x-4">
