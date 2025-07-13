@@ -54,6 +54,77 @@ const BookedPlans = () => {
     }).format(amount / 100);
   };
 
+  const parseItineraryDetails = (details: string) => {
+    try {
+      const parsed = JSON.parse(details);
+      if (parsed.itinerary && Array.isArray(parsed.itinerary)) {
+        return parsed.itinerary.map((day: any, index: number) => (
+          <div key={index} className="mb-3 p-3 bg-gray-50 rounded-lg">
+            <h4 className="font-semibold text-gray-800 mb-2">Day {day.day}</h4>
+            <ul className="list-disc list-inside space-y-1">
+              {day.activities?.map((activity: string, actIndex: number) => (
+                <li key={actIndex} className="text-gray-600 text-sm">{activity}</li>
+              ))}
+            </ul>
+          </div>
+        ));
+      }
+      if (parsed.highlights && Array.isArray(parsed.highlights)) {
+        return (
+          <div className="space-y-2">
+            <h4 className="font-semibold text-gray-800">Trip Highlights:</h4>
+            <ul className="list-disc list-inside space-y-1">
+              {parsed.highlights.map((highlight: string, index: number) => (
+                <li key={index} className="text-gray-600 text-sm">{highlight}</li>
+              ))}
+            </ul>
+          </div>
+        );
+      }
+      return <p className="text-gray-600 text-sm">{parsed.title || 'Adventure activities included'}</p>;
+    } catch (error) {
+      return <p className="text-gray-500 text-sm">Activity details unavailable</p>;
+    }
+  };
+
+  const parseTransportDetails = (details: string) => {
+    try {
+      const parsed = JSON.parse(details);
+      if (Object.keys(parsed).length === 0) {
+        return <p className="text-gray-500 text-sm">Transport details will be available after booking</p>;
+      }
+      return (
+        <div className="space-y-1">
+          {parsed.mode && <p className="text-sm text-gray-600">Mode: {parsed.mode}</p>}
+          {parsed.from && <p className="text-sm text-gray-600">From: {parsed.from}</p>}
+          {parsed.to && <p className="text-sm text-gray-600">To: {parsed.to}</p>}
+          {parsed.date && <p className="text-sm text-gray-600">Date: {new Date(parsed.date).toLocaleDateString()}</p>}
+        </div>
+      );
+    } catch (error) {
+      return <p className="text-gray-500 text-sm">Transport details unavailable</p>;
+    }
+  };
+
+  const parseHotelDetails = (details: string) => {
+    try {
+      const parsed = JSON.parse(details);
+      if (Object.keys(parsed).length === 0) {
+        return <p className="text-gray-500 text-sm">Hotel details will be available after booking</p>;
+      }
+      return (
+        <div className="space-y-1">
+          {parsed.name && <p className="text-sm text-gray-600">Hotel: {parsed.name}</p>}
+          {parsed.room && <p className="text-sm text-gray-600">Room: {parsed.room}</p>}
+          {parsed.checkin && <p className="text-sm text-gray-600">Check-in: {new Date(parsed.checkin).toLocaleDateString()}</p>}
+          {parsed.checkout && <p className="text-sm text-gray-600">Check-out: {new Date(parsed.checkout).toLocaleDateString()}</p>}
+        </div>
+      );
+    } catch (error) {
+      return <p className="text-gray-500 text-sm">Hotel details unavailable</p>;
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -287,8 +358,8 @@ const BookedPlans = () => {
                     <CardContent>
                       <p className="text-2xl font-bold text-blue-600">{formatCurrency(selectedPlan.transportAmount)}</p>
                       {selectedPlan.transportDetails && (
-                        <div className="mt-2 text-sm text-gray-600">
-                          <pre className="whitespace-pre-wrap">{JSON.stringify(JSON.parse(selectedPlan.transportDetails), null, 2)}</pre>
+                        <div className="mt-2">
+                          {parseTransportDetails(selectedPlan.transportDetails)}
                         </div>
                       )}
                     </CardContent>
@@ -304,8 +375,8 @@ const BookedPlans = () => {
                     <CardContent>
                       <p className="text-2xl font-bold text-orange-600">{formatCurrency(selectedPlan.hotelAmount)}</p>
                       {selectedPlan.hotelDetails && (
-                        <div className="mt-2 text-sm text-gray-600">
-                          <pre className="whitespace-pre-wrap">{JSON.stringify(JSON.parse(selectedPlan.hotelDetails), null, 2)}</pre>
+                        <div className="mt-2">
+                          {parseHotelDetails(selectedPlan.hotelDetails)}
                         </div>
                       )}
                     </CardContent>
@@ -321,8 +392,8 @@ const BookedPlans = () => {
                     <CardContent>
                       <p className="text-2xl font-bold text-yellow-600">{formatCurrency(selectedPlan.itineraryAmount)}</p>
                       {selectedPlan.itineraryDetails && (
-                        <div className="mt-2 text-sm text-gray-600">
-                          <pre className="whitespace-pre-wrap">{JSON.stringify(JSON.parse(selectedPlan.itineraryDetails), null, 2)}</pre>
+                        <div className="mt-2">
+                          {parseItineraryDetails(selectedPlan.itineraryDetails)}
                         </div>
                       )}
                     </CardContent>
