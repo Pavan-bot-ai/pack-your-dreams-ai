@@ -83,6 +83,18 @@ const AppContent = ({ showAuth, setShowAuth, showGuideRegistration, setShowGuide
     );
   }
 
+  // Debug logging for authentication state
+  console.log("App.tsx - User state:", {
+    user: user ? {
+      id: user.id,
+      username: user.username,
+      role: user.role,
+      isRegistrationComplete: user.isRegistrationComplete,
+      profileCompleted: user.profileCompleted
+    } : null,
+    isLoading
+  });
+
   // Show Guide Registration if user is guide but registration not complete
   if (showGuideRegistration || (user?.role === "guide" && !user?.isRegistrationComplete)) {
     return (
@@ -102,6 +114,7 @@ const AppContent = ({ showAuth, setShowAuth, showGuideRegistration, setShowGuide
 
   // Show Role-Based Dashboard for authenticated guides (they go directly to dashboard)
   if (user?.role === "guide" && user?.isRegistrationComplete) {
+    console.log("Showing GuideDashboard for user:", user.username, "role:", user.role, "isRegistrationComplete:", user.isRegistrationComplete);
     return (
       <TooltipProvider>
         <Toaster />

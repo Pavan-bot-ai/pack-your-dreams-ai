@@ -144,6 +144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: user.name,
           role: user.role,
           isRegistrationComplete: user.isRegistrationComplete,
+          profileCompleted: user.profileCompleted,
           language: user.language,
           countryOfResidence: user.countryOfResidence,
           travelStyle: user.travelStyle,
@@ -155,6 +156,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           passportCountry: user.passportCountry,
           emergencyContact: user.emergencyContact,
           profileCompletionPromptShown: user.profileCompletionPromptShown,
+          // Include guide-specific fields for guide users
+          bio: user.bio,
+          experience: user.experience,
+          certification: user.certification,
+          hourlyRate: user.hourlyRate,
+          serviceAreas: user.serviceAreas,
+          languages: user.languages,
+          tourInterests: user.tourInterests,
+          profileImageUrl: user.profileImageUrl,
+          rating: user.rating,
+          totalReviews: user.totalReviews,
+          totalEarnings: user.totalEarnings,
+          completedTours: user.completedTours,
           createdAt: user.createdAt,
           lastActiveAt: user.lastActiveAt
         } 
