@@ -102,7 +102,9 @@ export const ProfileCompletionModal = ({ isOpen, onClose, onComplete }: ProfileC
     try {
       await apiRequest('/api/auth/mark-prompt-shown', {
         method: 'POST',
+        body: JSON.stringify({}),
       });
+      await refreshUser();
       onClose();
     } catch (error) {
       console.error('Error marking prompt as shown:', error);

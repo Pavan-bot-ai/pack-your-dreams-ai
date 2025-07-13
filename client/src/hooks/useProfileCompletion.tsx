@@ -25,8 +25,8 @@ export const useProfileCompletion = () => {
   const shouldShowProfilePrompt = (user: any) => {
     if (!user || user.role === 'guide') return false;
     
-    // Don't show if already shown or if profile is complete
-    if (user.profileCompletionPromptShown) return false;
+    // Don't show if already shown
+    if (user.profileCompletionPromptShown === true) return false;
     
     // Show if profile is incomplete
     return isProfileIncomplete(user);
@@ -39,7 +39,7 @@ export const useProfileCompletion = () => {
         if (shouldShowProfilePrompt(user)) {
           setShowProfileModal(true);
         }
-      }, 1000);
+      }, 800); // Slightly increased delay for stability
 
       return () => clearTimeout(timer);
     }
@@ -51,6 +51,10 @@ export const useProfileCompletion = () => {
 
   const handleCompleteProfile = () => {
     setShowProfileModal(false);
+    // Force refresh user data after profile completion
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
   };
 
   return {
