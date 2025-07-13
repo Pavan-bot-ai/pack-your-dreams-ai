@@ -66,15 +66,10 @@ export const ProfileCompletionModal = ({ isOpen, onClose, onComplete }: ProfileC
   const onSubmit = async (data: ProfileCompletion) => {
     setIsSubmitting(true);
     try {
-      await apiRequest('/api/auth/complete-profile', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+      await apiRequest('POST', '/api/auth/complete-profile', data);
       
       // Mark that the prompt has been shown
-      await apiRequest('/api/auth/mark-prompt-shown', {
-        method: 'POST',
-      });
+      await apiRequest('POST', '/api/auth/mark-prompt-shown');
       
       await refreshUser();
       
@@ -98,9 +93,7 @@ export const ProfileCompletionModal = ({ isOpen, onClose, onComplete }: ProfileC
 
   const handleMaybeLater = async () => {
     try {
-      await apiRequest('/api/auth/mark-prompt-shown', {
-        method: 'POST',
-      });
+      await apiRequest('POST', '/api/auth/mark-prompt-shown');
       await refreshUser();
       onClose();
     } catch (error) {
