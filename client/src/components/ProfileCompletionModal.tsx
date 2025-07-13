@@ -68,21 +68,16 @@ export const ProfileCompletionModal = ({ isOpen, onClose, onComplete }: ProfileC
   const onSubmit = async (data: ProfileCompletion) => {
     setIsSubmitting(true);
     try {
-      await apiRequest('/api/auth/complete-profile', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      });
+      await apiRequest('POST', '/api/auth/complete-profile', data);
       
       // Mark that the prompt has been shown
-      await apiRequest('/api/auth/mark-prompt-shown', {
-        method: 'POST',
-      });
+      await apiRequest('POST', '/api/auth/mark-prompt-shown', {});
       
       await refreshUser();
       
       toast({
         title: "Profile Completed!",
-        description: "Thank you for completing your travel profile. We'll now provide better recommendations!",
+        description: "Your travel preferences have been saved successfully.",
       });
       
       onComplete();
@@ -100,8 +95,13 @@ export const ProfileCompletionModal = ({ isOpen, onClose, onComplete }: ProfileC
 
   const handleMaybeLater = async () => {
     try {
-      await apiRequest('/api/auth/mark-prompt-shown', {
+      const token = localStorage.getItem('travelApp_token');
+      await fetch('/api/auth/mark-prompt-shown', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify({}),
       });
       await refreshUser();

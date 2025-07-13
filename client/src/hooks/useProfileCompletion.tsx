@@ -34,12 +34,20 @@ export const useProfileCompletion = () => {
 
   useEffect(() => {
     if (isAuthenticated && user) {
+      console.log('Profile completion check:', {
+        userId: user.id,
+        role: user.role,
+        promptShown: user.profileCompletionPromptShown,
+        shouldShow: shouldShowProfilePrompt(user)
+      });
+      
       // Small delay to ensure auth flow is complete
       const timer = setTimeout(() => {
         if (shouldShowProfilePrompt(user)) {
+          console.log('Showing profile modal for user:', user.id);
           setShowProfileModal(true);
         }
-      }, 800); // Slightly increased delay for stability
+      }, 1000); // Increased delay for stability
 
       return () => clearTimeout(timer);
     }
